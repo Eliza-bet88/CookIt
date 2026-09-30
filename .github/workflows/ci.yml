@@ -18,11 +18,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Show Node version
-        run: node --version
+      - name: Build Docker Compose
+        run: docker compose build
 
-      - name: Install dependencies
-        run: npm install
+      - name: Run Docker Compose
+        run: docker compose up
 
-      - name: Build project
-        run: npm run build
+      - name: Stop Docker Compose
+        run: docker compose down
