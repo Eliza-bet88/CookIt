@@ -1,0 +1,25 @@
+name: Deploy CookIt
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Get repository
+        uses: actions/checkout@v4
+
+      - name: Create temporary .env from GitHub Secrets
+        env:
+          TUNNEL_TOKEN: ${{ secrets.TUNNEL_TOKEN }}
+          NODE_ENV: ${{ secrets.NODE_ENV }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+        run: |
+          umask 077
+          printf 'NODE_ENV=%s\nVITE_API_URL=%s\nTUNNEL_TOKEN=%s\n' \
+            "$NODE_ENV" "$VITE_API_URL" "$TUNNEL_TOKEN" > .env
+
+      - name: Start Docker services
+        run: docker compose -f docker/docker-compose.yml up -d --build

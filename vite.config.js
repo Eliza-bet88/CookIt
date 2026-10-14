@@ -5,6 +5,6 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react()],
   server: {
-    allowedHosts: ['cookit.eikwick.id.lv'],
+    allowedHosts: ['cookit-app.eikwick.id.lv'],
   },
 })
