@@ -5,10 +5,12 @@ on:
     branches:
       - main
       - develop
+      - prerelease
   pull_request:
     branches:
       - main
       - develop
+      - prerelease
 
 jobs:
   build:
@@ -18,11 +20,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build Docker Compose
-        run: docker compose build
+      - name: Show Node version
+        run: node --version
 
-      - name: Run Docker Compose
-        run: docker compose up
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Stop Docker Compose
-        run: docker compose down
+      - name: Build project
+        run: npm run build

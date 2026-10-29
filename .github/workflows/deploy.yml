@@ -1,25 +1,36 @@
 name: Deploy CookIt
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - prerelease
+      - main
 
 jobs:
-  deploy:
+  deploy-staging:
+    if: github.ref == 'refs/heads/prerelease'
     runs-on: self-hosted
 
     steps:
-      - name: Get repository
+      - name: Get prerelease code
         uses: actions/checkout@v4
+        with:
+          path: cookit-staging
 
-      - name: Create temporary .env from GitHub Secrets
-        env:
-          TUNNEL_TOKEN: ${{ secrets.TUNNEL_TOKEN }}
-          NODE_ENV: ${{ secrets.NODE_ENV }}
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
-        run: |
-          umask 077
-          printf 'NODE_ENV=%s\nVITE_API_URL=%s\nTUNNEL_TOKEN=%s\n' \
-            "$NODE_ENV" "$VITE_API_URL" "$TUNNEL_TOKEN" > .env
+      - name: Start test version
+        working-directory: cookit-staging
+        run: docker compose -p cookit-staging -f docker/docker-compose.staging.yml up -d --build
 
-      - name: Start Docker services
-        run: docker compose -f docker/docker-compose.yml up -d --build
+  deploy-production:
+    if: github.ref == 'refs/heads/main'
+    runs-on: self-hosted
+
+    steps:
+      - name: Get main code
+        uses: actions/checkout@v4
+        with:
+          path: cookit-production
+
+      - name: Start stable version
+        working-directory: cookit-production
+        run: docker compose -p cookit-production -f docker/docker-compose.production.yml up -d --build
