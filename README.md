@@ -1,5 +1,8 @@
 # CookIt
 
+Figma:
+https://www.figma.com/design/UYtQmr78U0pDz9rV7upoX2/CookIt?node-id=7-70&t=x4qy5q7NYJRNgDDS-1
+
 ## Vietne ar receptēm, kas piedāvā ēdienus, balstoties uz lietotājam pieejamajiem produktiem.
 
 - Lietotājs pievieno savus produktus kas viņam šobrīd ir ledusskapī
