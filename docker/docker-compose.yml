@@ -1,0 +1,19 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: cookit-app
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    env_file:
+      - ../.env
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: cookit-tunnel
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    command: tunnel --no-autoupdate run

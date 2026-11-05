@@ -1,0 +1,36 @@
+name: Deploy CookIt
+
+on:
+  push:
+    branches:
+      - prerelease
+      - main
+
+jobs:
+  deploy-staging:
+    if: github.ref == 'refs/heads/prerelease'
+    runs-on: self-hosted
+
+    steps:
+      - name: Get prerelease code
+        uses: actions/checkout@v4
+        with:
+          path: cookit-staging
+
+      - name: Start test version
+        working-directory: cookit-staging
+        run: docker compose -p cookit-staging -f docker/docker-compose.staging.yml up -d --build
+
+  deploy-production:
+    if: github.ref == 'refs/heads/main'
+    runs-on: self-hosted
+
+    steps:
+      - name: Get main code
+        uses: actions/checkout@v4
+        with:
+          path: cookit-production
+
+      - name: Start stable version
+        working-directory: cookit-production
+        run: docker compose -p cookit-production -f docker/docker-compose.production.yml up -d --build
