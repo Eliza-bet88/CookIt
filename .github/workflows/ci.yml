@@ -15,17 +15,12 @@ jobs:
       - name: Get project code
         uses: actions/checkout@v4
 
-      - name: Install Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
       - name: Run unit test
-        run: python tests/unit_placeholder.py
+        run: python3 tests/unit_placeholder.py
 
       - name: Run integration test
         if: github.base_ref == 'prerelease' || github.base_ref == 'main'
-        run: python tests/integration_placeholder.py
+        run: python3 tests/integration_placeholder.py
 
       - name: Install Node.js
         if: github.base_ref == 'main'
@@ -53,9 +48,9 @@ jobs:
 
       - name: Check application
         if: github.base_ref == 'main'
-        run: APP_URL=http://127.0.0.1:5180 python tests/smoke_placeholder.py
+        run: APP_URL=http://127.0.0.1:5180 python3 tests/smoke_placeholder.py
 
-      - name: Show error from Docker
+      - name: Show Docker error
         if: failure() && github.base_ref == 'main'
         run: docker logs cookit-ci || true
 
