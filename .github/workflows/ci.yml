@@ -1,30 +1,59 @@
-name: CI
+name: Pull request validation
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-      - prerelease
   pull_request:
     branches:
-      - main
       - develop
       - prerelease
+      - main
 
 jobs:
-  build:
+  quality-gate:
     runs-on: self-hosted
 
     steps:
-      - name: Checkout repository
+      - name: Get project code
         uses: actions/checkout@v4
 
-      - name: Show Node version
-        run: node --version
+      - name: Run unit test
+        run: python3 tests/unit_placeholder.py
 
-      - name: Install dependencies
+      - name: Run integration test
+        if: github.base_ref == 'prerelease' || github.base_ref == 'main'
+        run: python3 tests/integration_placeholder.py
+
+      - name: Install Node.js
+        if: github.base_ref == 'main'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install project dependencies
+        if: github.base_ref == 'main'
         run: npm ci
 
       - name: Build project
+        if: github.base_ref == 'main'
         run: npm run build
+
+      - name: Build Docker image
+        if: github.base_ref == 'main'
+        run: docker build -t cookit-ci -f docker/Dockerfile .
+
+      - name: Start application
+        if: github.base_ref == 'main'
+        run: |
+          docker rm -f cookit-ci || true
+          docker run -d --name cookit-ci -p 5180:5173 cookit-ci
+
+      - name: Check application
+        if: github.base_ref == 'main'
+        run: APP_URL=http://127.0.0.1:5180 python3 tests/smoke_placeholder.py
+
+      - name: Show Docker error
+        if: failure() && github.base_ref == 'main'
+        run: docker logs cookit-ci || true
+
+      - name: Stop application
+        if: always() && github.base_ref == 'main'
+        run: docker rm -f cookit-ci || true
