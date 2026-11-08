@@ -33,4 +33,6 @@ jobs:
 
       - name: Start stable version
         working-directory: cookit-production
+        env:
+          TUNNEL_TOKEN: ${{ secrets.TUNNEL_TOKEN }}
         run: docker compose -p cookit-production -f docker/docker-compose.production.yml up -d --build
