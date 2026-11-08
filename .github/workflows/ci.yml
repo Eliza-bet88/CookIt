@@ -45,6 +45,7 @@ jobs:
         run: |
           docker rm -f cookit-ci || true
           docker run -d --name cookit-ci -p 5180:5173 cookit-ci
+          sleep 3
 
       - name: Check application
         if: github.base_ref == 'main'
