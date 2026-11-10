@@ -22,8 +22,14 @@ export default function App() {
           <input placeholder="Search recipes or ingredients" />
         </label>
 
-        <h2>Welcome to CookIt</h2>
-        <p>Find recipes from products in your fridge.</p>
+        <section className="recipe-day">
+          <div className="recipe-day-content">
+            <h2>Recipe of the day</h2>
+            <p>Find something tasty today.</p>
+            <a className="button" href="#recipes">Open recipe</a>
+          </div>
+          <div className="recipe-day-image">demo image</div>
+        </section>
       </main>
 
       <aside className="right-panel">
