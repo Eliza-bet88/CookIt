@@ -45,6 +45,32 @@ export default function App() {
           <a className="button" href="#recipes">Find a recipe</a>
         </section>
 
+        <section className="recipes" id="recipes">
+          <h2>Recommended today</h2>
+
+          <div className="recipe-list">
+            <article className="recipe-card">
+              <div className="card-image">🍗</div>
+                <h3>Chicken</h3>
+            </article>
+
+            <article className="recipe-card">
+              <div className="card-image">🍝</div>
+                <h3>Pasta</h3>
+            </article>
+
+            <article className="recipe-card">
+              <div className="card-image">🍲</div>
+              <h3>Soup</h3>
+            </article>
+
+            <article className="recipe-card">
+              <div className="card-image">🥗</div>
+              <h3>Vegetables</h3>
+            </article>
+          </div>
+        </section>
+
       </main>
 
       <aside className="right-panel">
