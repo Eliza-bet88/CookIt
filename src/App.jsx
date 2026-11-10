@@ -1,6 +1,16 @@
+import { useState } from 'react'
 import './App.css'
 
 export default function App() {
+  const [recipe, setRecipe] = useState(null)
+  async function getRandomRecipe() {
+    const response = await fetch(
+      'https://www.themealdb.com/api/json/v1/1/random.php'
+    )
+
+    const data = await response.json()
+    setRecipe(data.meals[0])
+  }
   return (
     <div className="page">
       <aside className="sidebar">
@@ -26,9 +36,15 @@ export default function App() {
           <div className="recipe-day-content">
             <h2>Recipe of the day</h2>
             <p>Find something tasty today.</p>
-            <a className="button" href="#recipes">Open recipe</a>
+            <button className="button" onClick={getRandomRecipe}>
+              Get random recipe
+            </button>
+            {recipe && <h3>{recipe.strMeal}</h3>}
           </div>
-          <div className="recipe-day-image">demo image</div>
+          <div className="recipe-day-image">
+            {recipe && <img src={recipe.strMealThumb} alt={recipe.strMeal} />}
+            {!recipe && '🍲'}
+          </div>
         </section>
 
         <section className="fridge" id="fridge">
