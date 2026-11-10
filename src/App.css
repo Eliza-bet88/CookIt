@@ -93,3 +93,28 @@ a {
   background: #39734f;
   color: white;
 }
+
+
+.fridge {
+  margin-top: 40px;
+}
+
+.ingredients {
+  display: flex;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.ingredient {
+  min-width: 100px;
+  padding: 18px 10px;
+  border-radius: 15px;
+  background: white;
+  text-align: center;
+  font-size: 28px;
+}
+
+.ingredient p {
+  margin: 8px 0 0;
+  font-size: 14px;
+}
