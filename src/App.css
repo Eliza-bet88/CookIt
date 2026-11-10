@@ -16,7 +16,7 @@ a {
 
 .page {
   display: grid;
-  grid-template-columns: 200px 1fr 220px;
+  grid-template-columns: 200px minmax(0, 1fr) 220px;
   min-height: 100vh;
 }
 
@@ -47,6 +47,7 @@ a {
 }
 
 .content {
+  min-width: 0;
   padding: 30px;
 }
 
@@ -67,22 +68,84 @@ a {
 
 .recipe-day {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  margin-top: 25px;
+  grid-template-columns: minmax(210px, 1fr) minmax(0, 2fr) minmax(264px, 1fr);
+  width: 100%;
+  max-width: 100%;
+  height: 320px;
+  margin: 25px 0 0;
   overflow: hidden;
   border-radius: 20px;
   background: #e2efdc;
 }
 
 .recipe-day-content {
-  padding: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  min-width: 0;
+  padding: 25px;
+  text-align: center;
+}
+
+.recipe-day-content h2,
+.recipe-day-content p,
+.recipe-day-content h3 {
+  max-width: 100%;
+}
+
+.recipe-day-content h3 {
+  max-height: 78px;
+  overflow: hidden;
+}
+
+.recipe-day-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  min-width: 0;
+  padding: 30px 40px;
+  border-radius: 25px;
+  background: rgba(255, 255, 255, 0.7);
+  text-align: center;
+}
+
+.recipe-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.recipe-tags span {
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: white;
+}
+
+.recipe-day-info p {
+  max-width: 100%;
+  font-size: 20px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.recipe-info-button {
+  border: 2px solid #39734f;
+  border-radius: 25px;
+  background: transparent;
+  color: #2d4638;
+  cursor: pointer;
+  font: inherit;
+  padding: 12px 24px;
 }
 
 .recipe-day-image {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #c9dec1;
+  padding: 12px;
   font-size: 70px;
 }
 
@@ -101,6 +164,7 @@ a {
 
 .ingredients {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   margin: 20px 0;
 }
@@ -124,13 +188,13 @@ a {
 }
 
 .recipe-list {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 15px;
   margin-top: 20px;
 }
 
 .recipe-card {
-  flex: 1;
   overflow: hidden;
   border-radius: 15px;
   background: white;
@@ -149,7 +213,138 @@ a {
 }
 
 .recipe-day-image img {
+  display: block;
+  width: 240px;
+  max-width: 100%;
+  height: auto;
+  max-height: 220px;
+  object-fit: contain;
+  object-position: center;
+}
+
+.search button {
+  border: 0;
+  border-radius: 18px;
+  background: #39734f;
+  color: white;
+  cursor: pointer;
+  padding: 8px 14px;
+}
+
+.recipe-card img {
+  display: block;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: 150px;
+  padding: 8px;
+  border: 1px solid #dce6d8;
+  border-radius: 15px;
+  background: white;
+  object-fit: contain;
+}
+
+.view-all {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  border: 0;
+  border-radius: 15px;
+  background: white;
+  color: #39734f;
+  cursor: pointer;
+  font: inherit;
+  font-weight: bold;
+}
+
+.view-all span {
+  font-size: 28px;
+}
+
+.result-page {
+  min-height: 100vh;
+  padding: 40px;
+  background: #f4f8f2;
+}
+
+.back-button {
+  border: 0;
+  border-radius: 20px;
+  background: #39734f;
+  color: white;
+  cursor: pointer;
+  padding: 12px 20px;
+}
+
+.search-title {
+  margin-bottom: 25px;
+  font-size: 18px;
+}
+
+.result-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 1200px) {
+  .page {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+
+  .right-panel {
+    display: none;
+  }
+
+  .recipe-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .result-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .page {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    padding: 20px;
+  }
+
+  .sidebar nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 15px;
+  }
+
+  .user-name,
+  .right-panel {
+    display: none;
+  }
+
+  .content,
+  .result-page {
+    padding: 20px;
+  }
+
+  .recipe-day {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .recipe-day-content {
+    padding: 30px;
+  }
+
+  .recipe-day-image {
+    min-height: 200px;
+  }
+
+  .recipe-list,
+  .result-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
