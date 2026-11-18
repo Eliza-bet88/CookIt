@@ -26,6 +26,10 @@ a {
   background: white;
 }
 
+.right-panel {
+  border-left: 1px solid #e2eadf;
+}
+
 .sidebar {
   display: flex;
   flex-direction: column;
@@ -204,10 +208,22 @@ a {
 }
 
 .recipe-card {
+  border: 0;
+  color: inherit;
+  font: inherit;
   overflow: hidden;
   border-radius: 15px;
   background: white;
   text-align: center;
+}
+
+button.recipe-card {
+  cursor: pointer;
+}
+
+button.recipe-card:hover {
+  box-shadow: 0 8px 20px rgba(44, 88, 59, 0.14);
+  transform: translateY(-2px);
 }
 
 .card-image {
@@ -270,6 +286,127 @@ a {
 
 .view-all span {
   font-size: 28px;
+}
+
+.today-date h2,
+.recipe-history h2 {
+  margin: 0;
+  color: #263f32;
+}
+
+.today-date p {
+  margin: 5px 0 0;
+  color: #7a8d81;
+}
+
+.recipe-history {
+  margin-top: 65px;
+}
+
+.recipe-history-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.recipe-history-heading button,
+.view-history-button,
+.clear-history-button {
+  border: 0;
+  background: transparent;
+  color: #39734f;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 0;
+}
+
+.empty-history {
+  color: #7a8d81;
+  font-size: 14px;
+}
+
+.history-list,
+.history-modal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  margin-top: 22px;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.history-item img {
+  width: 62px;
+  height: 62px;
+  flex: 0 0 auto;
+  border-radius: 16px;
+  object-fit: cover;
+}
+
+.history-item p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.view-history-button {
+  margin-top: 22px;
+}
+
+.history-modal-backdrop {
+  position: fixed;
+  z-index: 10;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(32, 55, 42, 0.42);
+}
+
+.history-modal {
+  width: min(560px, 100%);
+  max-height: min(720px, 90vh);
+  overflow: auto;
+  padding: 30px;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 20px 55px rgba(20, 48, 30, 0.25);
+}
+
+.history-modal-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.history-modal-heading h2 {
+  margin: 0;
+}
+
+.history-modal-heading button {
+  border: 0;
+  background: transparent;
+  color: #39734f;
+  cursor: pointer;
+  font-size: 32px;
+  line-height: 1;
+}
+
+.history-modal-list {
+  padding: 4px 0;
+}
+
+.clear-history-button {
+  display: block;
+  margin: 28px 0 0 auto;
+  color: #a33e3e;
 }
 
 .result-page {

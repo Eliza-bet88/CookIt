@@ -1,20 +1,40 @@
-export async function searchRecipes(searchText) {
-  const response = await fetch(
-    'https://www.themealdb.com/api/json/v1/1/search.php?s=' +
-      encodeURIComponent(searchText)
-  )
+async function getMeals(url) {
+  const response = await fetch(url)
 
   if (!response.ok) {
     throw new Error('Could not load recipes')
   }
 
   const data = await response.json()
+  return data.meals ?? []
+}
 
-  if (data.meals) {
-    return data.meals
+export async function searchRecipes(searchText) {
+  const search = searchText.trim().toLowerCase()
+  const urls = [
+    'https://www.themealdb.com/api/json/v1/1/search.php?s=' +
+      encodeURIComponent(search),
+    'https://www.themealdb.com/api/json/v1/1/filter.php?i=' +
+      encodeURIComponent(search),
+  ]
+
+  if (search.endsWith('s') && search.length > 1) {
+    urls.push(
+      'https://www.themealdb.com/api/json/v1/1/filter.php?i=' +
+        encodeURIComponent(search.slice(0, -1))
+    )
   }
 
-  return []
+  const results = await Promise.all(urls.map(getMeals))
+  const recipes = new Map()
+
+  for (const list of results) {
+    for (const recipe of list) {
+      recipes.set(recipe.idMeal, recipe)
+    }
+  }
+
+  return [...recipes.values()]
 }
 
 export async function getRecommendedRecipes() {

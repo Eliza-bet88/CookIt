@@ -7,6 +7,8 @@ import {
 import './App.css'
 
 const storageName = 'cookit.daily-recipe'
+const historyStorageName = 'cookit.recipe-history'
+const historyPreviewSize = 4
 
 const homeRecipes = [
   { id: 'chicken', name: 'Chicken', image: '🍗' },
@@ -41,6 +43,16 @@ export default function App() {
   const [searchText, setSearchText] = useState('')
   const [searchRecipesList, setSearchRecipesList] = useState([])
   const [recommendedRecipes, setRecommendedRecipes] = useState([])
+  const [recipeHistory, setRecipeHistory] = useState(() => {
+    try {
+      const savedHistory = JSON.parse(localStorage.getItem(historyStorageName))
+      return Array.isArray(savedHistory) ? savedHistory : []
+    } catch {
+      localStorage.removeItem(historyStorageName)
+      return []
+    }
+  })
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [message, setMessage] = useState('')
   const [page, setPage] = useState('home')
 
@@ -100,6 +112,32 @@ export default function App() {
       clearTimeout(timer)
     }
   }, [])
+
+  function saveRecipeToHistory(recipeToSave) {
+    if (!recipeToSave) {
+      return
+    }
+
+    const savedRecipe = {
+      idMeal: recipeToSave.idMeal,
+      strMeal: recipeToSave.strMeal,
+      strMealThumb: recipeToSave.strMealThumb,
+    }
+
+    const updatedHistory = [
+      savedRecipe,
+      ...recipeHistory.filter((item) => item.idMeal !== savedRecipe.idMeal),
+    ].slice(0, 100)
+
+    setRecipeHistory(updatedHistory)
+    localStorage.setItem(historyStorageName, JSON.stringify(updatedHistory))
+  }
+
+  function clearRecipeHistory() {
+    setRecipeHistory([])
+    localStorage.removeItem(historyStorageName)
+    setIsHistoryOpen(false)
+  }
 
   async function searchRecipe(event) {
     event.preventDefault()
@@ -164,10 +202,15 @@ export default function App() {
 
         <div className="result-list">
           {searchRecipesList.map((item) => (
-            <article className="recipe-card" key={item.idMeal}>
+            <button
+              className="recipe-card"
+              key={item.idMeal}
+              onClick={() => saveRecipeToHistory(item)}
+              type="button"
+            >
               <img src={item.strMealThumb} alt={item.strMeal} />
               <h3>{item.strMeal}</h3>
-            </article>
+            </button>
           ))}
         </div>
       </main>
@@ -188,10 +231,15 @@ export default function App() {
 
         <div className="result-list">
           {recommendedRecipes.map((item) => (
-            <article className="recipe-card" key={item.idMeal}>
+            <button
+              className="recipe-card"
+              key={item.idMeal}
+              onClick={() => saveRecipeToHistory(item)}
+              type="button"
+            >
               <img src={item.strMealThumb} alt={item.strMeal} />
               <h3>{item.strMeal}</h3>
-            </article>
+            </button>
           ))}
         </div>
       </main>
@@ -245,7 +293,12 @@ export default function App() {
                 : 'Your recipe of the day is being prepared.'}
             </p>
 
-            <button className="recipe-info-button" type="button">
+            <button
+              className="recipe-info-button"
+              disabled={!recipe}
+              onClick={() => saveRecipeToHistory(recipe)}
+              type="button"
+            >
               View recipe <span aria-hidden="true">→</span>
             </button>
 
@@ -296,9 +349,93 @@ export default function App() {
       </main>
 
       <aside className="right-panel">
-        <h2>demo - today's day of the week</h2>
-        <p>demo - today's date</p>
+        <section className="today-date">
+          <h2>
+            {new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(
+              new Date()
+            )}
+          </h2>
+          <p>
+            {new Intl.DateTimeFormat('en-US', {
+              month: 'long',
+              day: 'numeric',
+            }).format(new Date())}
+          </p>
+        </section>
+
+        <section className="recipe-history">
+          <div className="recipe-history-heading">
+            <h2>Recently viewed</h2>
+            {recipeHistory.length > 0 && (
+              <button onClick={clearRecipeHistory} type="button">
+                Clear history
+              </button>
+            )}
+          </div>
+
+          {recipeHistory.length === 0 && (
+            <p className="empty-history">No recipes viewed yet.</p>
+          )}
+
+          <div className="history-list">
+            {recipeHistory.slice(0, historyPreviewSize).map((item) => (
+              <article className="history-item" key={item.idMeal}>
+                <img src={item.strMealThumb} alt={item.strMeal} />
+                <p>{item.strMeal}</p>
+              </article>
+            ))}
+          </div>
+
+          {recipeHistory.length > historyPreviewSize && (
+            <button
+              className="view-history-button"
+              onClick={() => setIsHistoryOpen(true)}
+              type="button"
+            >
+              View all history
+            </button>
+          )}
+        </section>
       </aside>
+
+      {isHistoryOpen && (
+        <div className="history-modal-backdrop" role="presentation">
+          <section
+            aria-labelledby="history-title"
+            aria-modal="true"
+            className="history-modal"
+            role="dialog"
+          >
+            <div className="history-modal-heading">
+              <h2 id="history-title">All viewed recipes</h2>
+              <button
+                aria-label="Close recipe history"
+                onClick={() => setIsHistoryOpen(false)}
+                type="button"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="history-modal-list">
+              {recipeHistory.map((item) => (
+                <article className="history-item" key={item.idMeal}>
+                  <img src={item.strMealThumb} alt={item.strMeal} />
+                  <p>{item.strMeal}</p>
+                </article>
+              ))}
+            </div>
+
+            <button
+              className="clear-history-button"
+              onClick={clearRecipeHistory}
+              type="button"
+            >
+              Clear history
+            </button>
+          </section>
+        </div>
+      )}
     </div>
   )
 }
