@@ -1,6 +1,12 @@
-import { useState } from 'react'
-import { getRecommendedRecipes, searchRecipes } from './api/meals'
+import { useEffect, useState } from 'react'
+import {
+  getDailyRecipe,
+  getRecommendedRecipes,
+  searchRecipes,
+} from './api/meals'
 import './App.css'
+
+const storageName = 'cookit.daily-recipe'
 
 const homeRecipes = [
   { id: 'chicken', name: 'Chicken', image: '🍗' },
@@ -9,22 +15,91 @@ const homeRecipes = [
   { id: 'vegetables', name: 'Vegetables', image: '🥗' },
 ]
 
+function getRecipeDetails(recipe) {
+  let ingredients = 0
+
+  for (let number = 1; number <= 20; number += 1) {
+    if (recipe[`strIngredient${number}`]?.trim()) {
+      ingredients += 1
+    }
+  }
+
+  const estimatedMinutes = Math.max(15, ingredients * 5)
+  let difficulty = 'Easy'
+  if (ingredients > 12) {
+    difficulty = 'Hard'
+  } else if (ingredients > 7) {
+    difficulty = 'Medium'
+  }
+
+  return { estimatedMinutes, difficulty }
+}
+
 export default function App() {
   const [recipe, setRecipe] = useState(null)
+  const [dailyRecipeStatus, setDailyRecipeStatus] = useState('loading')
   const [searchText, setSearchText] = useState('')
   const [searchRecipesList, setSearchRecipesList] = useState([])
   const [recommendedRecipes, setRecommendedRecipes] = useState([])
   const [message, setMessage] = useState('')
   const [page, setPage] = useState('home')
 
-  async function getRandomRecipe() {
-    const response = await fetch(
-      'https://www.themealdb.com/api/json/v1/1/random.php'
-    )
+  useEffect(() => {
+    let pageIsOpen = true
+    let timer
 
-    const data = await response.json()
-    setRecipe(data.meals[0])
-  }
+    async function loadDailyRecipe() {
+      const today = new Date().toDateString()
+      let savedRecipe = null
+
+      try {
+        savedRecipe = JSON.parse(localStorage.getItem(storageName))
+      } catch {
+        localStorage.removeItem(storageName)
+      }
+
+      if (savedRecipe?.date === today && savedRecipe.recipe) {
+        if (pageIsOpen) {
+          setRecipe(savedRecipe.recipe)
+          setDailyRecipeStatus('ready')
+        }
+      } else {
+        setDailyRecipeStatus('loading')
+
+        try {
+          const newRecipe = await getDailyRecipe()
+
+          localStorage.setItem(
+            storageName,
+            JSON.stringify({ date: today, recipe: newRecipe })
+          )
+
+          if (pageIsOpen) {
+            setRecipe(newRecipe)
+            setDailyRecipeStatus('ready')
+          }
+        } catch {
+          if (pageIsOpen) {
+            setDailyRecipeStatus('error')
+          }
+        }
+      }
+
+      const nextMidnight = new Date()
+      nextMidnight.setHours(24, 0, 0, 0)
+      timer = window.setTimeout(
+        loadDailyRecipe,
+        nextMidnight.getTime() - Date.now()
+      )
+    }
+
+    loadDailyRecipe()
+
+    return () => {
+      pageIsOpen = false
+      clearTimeout(timer)
+    }
+  }, [])
 
   async function searchRecipe(event) {
     event.preventDefault()
@@ -72,6 +147,8 @@ export default function App() {
     setPage('home')
     setMessage('')
   }
+
+  const recipeDetails = recipe ? getRecipeDetails(recipe) : null
 
   if (page === 'search') {
     return (
@@ -150,30 +227,32 @@ export default function App() {
 
         <section className="recipe-day">
           <div className="recipe-day-content">
-            <h2>Recipe of the day</h2>
-            <p>Find something tasty today.</p>
-            <button className="button" onClick={getRandomRecipe} type="button">
-              Get random recipe
-            </button>
-            {recipe && <h3>{recipe.strMeal}</h3>}
-          </div>
-
-          <div className="recipe-day-info">
             <div className="recipe-tags">
               <span>{recipe ? recipe.strCategory : 'Recipe'}</span>
-              <span>30 min</span>
-              <span>Easy</span>
+              <span>{recipeDetails ? `≈ ${recipeDetails.estimatedMinutes} min` : '—'}</span>
+              <span>{recipeDetails ? recipeDetails.difficulty : '—'}</span>
             </div>
 
-            <p>
+            <h2>
+              Recipe of
+              <br />
+              the day
+            </h2>
+
+            <p className="recipe-day-description">
               {recipe
                 ? `A tasty ${recipe.strMeal} recipe for today.`
-                : 'Choose a random recipe to see it here.'}
+                : 'Your recipe of the day is being prepared.'}
             </p>
 
             <button className="recipe-info-button" type="button">
-              View recipe →
+              View recipe <span aria-hidden="true">→</span>
             </button>
+
+            {dailyRecipeStatus === 'loading' && <p>Loading today&apos;s recipe…</p>}
+            {dailyRecipeStatus === 'error' && (
+              <p>Today&apos;s recipe could not be loaded. Please refresh the page.</p>
+            )}
           </div>
 
           <div className="recipe-day-image">
