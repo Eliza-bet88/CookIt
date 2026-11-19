@@ -1,15 +1,35 @@
 import { useEffect, useState } from 'react'
+import { Book, Fridge, Heart, HomeAlt, User } from 'iconoir-react'
 import {
   getDailyRecipe,
   getRecipeById,
   getRecommendedRecipes,
   searchRecipes,
 } from './api/meals'
+import FavoritesPage from './pages/Favorites/FavoritesPage'
+import MyFridgePage from './pages/MyFridge/MyFridgePage'
+import ProfilePage from './pages/Profile/ProfilePage'
+import RecipesPage from './pages/Recipes/RecipesPage'
 import './App.css'
 
 const storageName = 'cookit.daily-recipe'
 const historyStorageName = 'cookit.recipe-history'
 const historyPreviewSize = 4
+
+const menuItems = [
+  { path: '/', label: 'Home', icon: HomeAlt },
+  { path: '/my-fridge', label: 'My Fridge', icon: Fridge },
+  { path: '/recipes', label: 'Recipes', icon: Book },
+  { path: '/favorites', label: 'Favorites', icon: Heart },
+  { path: '/profile', label: 'Profile', icon: User },
+]
+
+const demoPages = {
+  '/my-fridge': MyFridgePage,
+  '/recipes': RecipesPage,
+  '/favorites': FavoritesPage,
+  '/profile': ProfilePage,
+}
 
 const homeRecipes = [
   { id: 'chicken', name: 'Chicken', image: '🍗' },
@@ -126,6 +146,33 @@ function RecipeDialog({ recipe, status, onClose }) {
   )
 }
 
+function Sidebar({ currentPath, goToPage }) {
+  return (
+    <aside className="sidebar">
+      <h1>CookIt</h1>
+      <nav className="main-menu" aria-label="Main navigation">
+        {menuItems.map((item) => {
+          const Icon = item.icon
+          const isActive = currentPath === item.path
+
+          return (
+            <button
+              className={isActive ? 'menu-link active-menu-link' : 'menu-link'}
+              key={item.path}
+              onClick={() => goToPage(item.path)}
+              type="button"
+            >
+              <Icon aria-hidden="true" />
+              <span>{item.label}</span>
+            </button>
+          )
+        })}
+      </nav>
+      <p className="user-name">User Name</p>
+    </aside>
+  )
+}
+
 export default function App() {
   const [recipe, setRecipe] = useState(null)
   const [dailyRecipeStatus, setDailyRecipeStatus] = useState('loading')
@@ -146,6 +193,16 @@ export default function App() {
   const [openedRecipeStatus, setOpenedRecipeStatus] = useState('idle')
   const [message, setMessage] = useState('')
   const [page, setPage] = useState('home')
+  const [currentPath, setCurrentPath] = useState(window.location.pathname)
+
+  useEffect(() => {
+    function showPreviousPage() {
+      setCurrentPath(window.location.pathname)
+    }
+
+    window.addEventListener('popstate', showPreviousPage)
+    return () => window.removeEventListener('popstate', showPreviousPage)
+  }, [])
 
   useEffect(() => {
     let pageIsOpen = true
@@ -301,7 +358,26 @@ export default function App() {
     setMessage('')
   }
 
+  function goToPage(path) {
+    if (path === currentPath) {
+      return
+    }
+
+    window.history.pushState({}, '', path)
+    setCurrentPath(path)
+  }
+
   const recipeDetails = recipe ? getRecipeDetails(recipe) : null
+  const DemoPage = demoPages[currentPath]
+
+  if (DemoPage) {
+    return (
+      <div className="page demo-layout">
+        <Sidebar currentPath={currentPath} goToPage={goToPage} />
+        <DemoPage />
+      </div>
+    )
+  }
 
   if (page === 'search') {
     return (
@@ -369,19 +445,7 @@ export default function App() {
 
   return (
     <div className="page">
-      <aside className="sidebar">
-        <h1>CookIt</h1>
-
-        <nav>
-          <a href="#home">Home</a>
-          <a href="#fridge">My Fridge</a>
-          <a href="#recipes">Recipes</a>
-          <a href="#favorites">Favorites</a>
-          <a href="#profile">Profile</a>
-        </nav>
-
-        <p className="user-name">User Name</p>
-      </aside>
+      <Sidebar currentPath={currentPath} goToPage={goToPage} />
 
       <main className="content" id="home">
         <form className="search" onSubmit={searchRecipe}>
