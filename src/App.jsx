@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   getDailyRecipe,
+  getRecipeById,
   getRecommendedRecipes,
   searchRecipes,
 } from './api/meals'
@@ -37,6 +38,94 @@ function getRecipeDetails(recipe) {
   return { estimatedMinutes, difficulty }
 }
 
+function getIngredients(recipe) {
+  const ingredients = []
+
+  for (let number = 1; number <= 20; number += 1) {
+    const name = recipe[`strIngredient${number}`]?.trim()
+    const measure = recipe[`strMeasure${number}`]?.trim()
+
+    if (name) {
+      ingredients.push(measure ? `${measure} ${name}` : name)
+    }
+  }
+
+  return ingredients
+}
+
+function getVideoEmbedUrl(videoUrl) {
+  if (!videoUrl) {
+    return ''
+  }
+
+  try {
+    const url = new URL(videoUrl)
+    const videoId = url.hostname.includes('youtu.be')
+      ? url.pathname.slice(1)
+      : url.searchParams.get('v')
+
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : ''
+  } catch {
+    return ''
+  }
+}
+
+function RecipeDialog({ recipe, status, onClose }) {
+  if (!recipe && status !== 'loading') {
+    return null
+  }
+
+  const videoEmbedUrl = recipe ? getVideoEmbedUrl(recipe.strYoutube) : ''
+
+  return (
+    <div className="recipe-dialog-backdrop" role="presentation">
+      <section
+        aria-labelledby="recipe-dialog-title"
+        aria-modal="true"
+        className="recipe-dialog"
+        role="dialog"
+      >
+        <button
+          aria-label="Close recipe"
+          className="close-dialog-button"
+          onClick={onClose}
+          type="button"
+        >
+          ×
+        </button>
+
+        {status === 'loading' && <p className="dialog-message">Loading recipe...</p>}
+        {status === 'error' && <p className="dialog-message">Could not load this recipe.</p>}
+
+        {recipe && status === 'ready' && (
+          <>
+            <img className="recipe-dialog-image" src={recipe.strMealThumb} alt={recipe.strMeal} />
+            <div className="recipe-dialog-content">
+              <p className="recipe-dialog-category">{recipe.strCategory} · {recipe.strArea}</p>
+              <h2 id="recipe-dialog-title">{recipe.strMeal}</h2>
+              <h3>Ingredients</h3>
+              <ul className="ingredient-list">
+                {getIngredients(recipe).map((ingredient) => <li key={ingredient}>{ingredient}</li>)}
+              </ul>
+              <h3>Instructions</h3>
+              <p className="recipe-instructions">{recipe.strInstructions}</p>
+              {videoEmbedUrl && (
+                <div className="recipe-video">
+                  <iframe
+                    allowFullScreen
+                    src={videoEmbedUrl}
+                    title={`${recipe.strMeal} video`}
+                  />
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </section>
+    </div>
+  )
+}
+
 export default function App() {
   const [recipe, setRecipe] = useState(null)
   const [dailyRecipeStatus, setDailyRecipeStatus] = useState('loading')
@@ -53,6 +142,8 @@ export default function App() {
     }
   })
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+  const [openedRecipe, setOpenedRecipe] = useState(null)
+  const [openedRecipeStatus, setOpenedRecipeStatus] = useState('idle')
   const [message, setMessage] = useState('')
   const [page, setPage] = useState('home')
 
@@ -139,6 +230,30 @@ export default function App() {
     setIsHistoryOpen(false)
   }
 
+  async function openRecipe(recipeToOpen) {
+    if (!recipeToOpen) {
+      return
+    }
+
+    setOpenedRecipe(null)
+    setOpenedRecipeStatus('loading')
+    setIsHistoryOpen(false)
+
+    try {
+      const fullRecipe = await getRecipeById(recipeToOpen.idMeal)
+      setOpenedRecipe(fullRecipe)
+      setOpenedRecipeStatus('ready')
+      saveRecipeToHistory(fullRecipe)
+    } catch {
+      setOpenedRecipeStatus('error')
+    }
+  }
+
+  function closeRecipe() {
+    setOpenedRecipe(null)
+    setOpenedRecipeStatus('idle')
+  }
+
   async function searchRecipe(event) {
     event.preventDefault()
 
@@ -190,7 +305,8 @@ export default function App() {
 
   if (page === 'search') {
     return (
-      <main className="result-page">
+      <>
+        <main className="result-page">
         <button className="back-button" onClick={goHome} type="button">
           ← Back
         </button>
@@ -205,7 +321,7 @@ export default function App() {
             <button
               className="recipe-card"
               key={item.idMeal}
-              onClick={() => saveRecipeToHistory(item)}
+              onClick={() => openRecipe(item)}
               type="button"
             >
               <img src={item.strMealThumb} alt={item.strMeal} />
@@ -213,13 +329,16 @@ export default function App() {
             </button>
           ))}
         </div>
-      </main>
+        </main>
+        <RecipeDialog recipe={openedRecipe} status={openedRecipeStatus} onClose={closeRecipe} />
+      </>
     )
   }
 
   if (page === 'recommended') {
     return (
-      <main className="result-page">
+      <>
+        <main className="result-page">
         <button className="back-button" onClick={goHome} type="button">
           ← Back
         </button>
@@ -234,7 +353,7 @@ export default function App() {
             <button
               className="recipe-card"
               key={item.idMeal}
-              onClick={() => saveRecipeToHistory(item)}
+              onClick={() => openRecipe(item)}
               type="button"
             >
               <img src={item.strMealThumb} alt={item.strMeal} />
@@ -242,7 +361,9 @@ export default function App() {
             </button>
           ))}
         </div>
-      </main>
+        </main>
+        <RecipeDialog recipe={openedRecipe} status={openedRecipeStatus} onClose={closeRecipe} />
+      </>
     )
   }
 
@@ -296,7 +417,7 @@ export default function App() {
             <button
               className="recipe-info-button"
               disabled={!recipe}
-              onClick={() => saveRecipeToHistory(recipe)}
+              onClick={() => openRecipe(recipe)}
               type="button"
             >
               View recipe <span aria-hidden="true">→</span>
@@ -379,10 +500,16 @@ export default function App() {
 
           <div className="history-list">
             {recipeHistory.slice(0, historyPreviewSize).map((item) => (
-              <article className="history-item" key={item.idMeal}>
+              <button
+                className="history-item"
+                key={item.idMeal}
+                onClick={() => openRecipe(item)}
+                type="button"
+              >
                 <img src={item.strMealThumb} alt={item.strMeal} />
                 <p>{item.strMeal}</p>
-              </article>
+                <span aria-hidden="true">›</span>
+              </button>
             ))}
           </div>
 
@@ -419,10 +546,16 @@ export default function App() {
 
             <div className="history-modal-list">
               {recipeHistory.map((item) => (
-                <article className="history-item" key={item.idMeal}>
+                <button
+                  className="history-item"
+                  key={item.idMeal}
+                  onClick={() => openRecipe(item)}
+                  type="button"
+                >
                   <img src={item.strMealThumb} alt={item.strMeal} />
                   <p>{item.strMeal}</p>
-                </article>
+                  <span aria-hidden="true">›</span>
+                </button>
               ))}
             </div>
 
@@ -436,6 +569,8 @@ export default function App() {
           </section>
         </div>
       )}
+
+      <RecipeDialog recipe={openedRecipe} status={openedRecipeStatus} onClose={closeRecipe} />
     </div>
   )
 }

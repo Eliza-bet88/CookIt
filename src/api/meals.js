@@ -9,6 +9,19 @@ async function getMeals(url) {
   return data.meals ?? []
 }
 
+export async function getRecipeById(id) {
+  const recipes = await getMeals(
+    'https://www.themealdb.com/api/json/v1/1/lookup.php?i=' +
+      encodeURIComponent(id)
+  )
+
+  if (!recipes[0]) {
+    throw new Error('Recipe not found')
+  }
+
+  return recipes[0]
+}
+
 export async function searchRecipes(searchText) {
   const search = searchText.trim().toLowerCase()
   const urls = [
