@@ -51,7 +51,7 @@ function recipeMatchesFilters(recipe, recipeSearchText, selectedMeal, cookingTim
   return nameMatches && mealMatches && timeMatches
 }
 
-export default function RecipesPage({ products, onEditIngredients }) {
+export default function RecipesPage({ products, onEditIngredients, onOpenRecipe }) {
   const [recipesWithIngredientMatches, setRecipesWithIngredientMatches] = useState([])
   const [recipeLoadingStatus, setRecipeLoadingStatus] = useState('idle')
   const [recipeSearchText, setRecipeSearchText] = useState('')
@@ -157,7 +157,12 @@ export default function RecipesPage({ products, onEditIngredients }) {
 
       <div className="ingredient-recipe-grid">
         {visibleRecipes.map((recipe) => (
-          <article className="ingredient-recipe-card" key={recipe.idMeal}>
+          <button
+            className="ingredient-recipe-card"
+            key={recipe.idMeal}
+            onClick={() => onOpenRecipe(recipe)}
+            type="button"
+          >
             <img alt={recipe.strMeal} src={recipe.strMealThumb} />
             <div>
               <h2>{recipe.strMeal}</h2>
@@ -166,7 +171,7 @@ export default function RecipesPage({ products, onEditIngredients }) {
                 <User aria-hidden="true" /> {recipe.matchingIngredientCount} ingredient match{recipe.matchingIngredientCount > 1 ? 'es' : ''}
               </p>
             </div>
-          </article>
+          </button>
         ))}
       </div>
     </main>

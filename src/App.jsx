@@ -397,9 +397,11 @@ export default function App() {
       <div className="page demo-layout">
         <Sidebar currentPath={currentPath} goToPage={goToPage} />
         <RecipesPage
+          onOpenRecipe={openRecipe}
           products={fridgeProducts}
           onEditIngredients={() => goToPage('/my-fridge')}
         />
+        <RecipeDialog recipe={openedRecipe} status={openedRecipeStatus} onClose={closeRecipe} />
       </div>
     )
   }
