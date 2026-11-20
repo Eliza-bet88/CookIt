@@ -1,30 +1,32 @@
-import { useEffect, useState } from 'react'
-import { Plus, Search, Trash, Xmark } from 'iconoir-react'
+import { useState } from 'react'
+import { Minus, Plus, Search, Trash, Xmark } from 'iconoir-react'
 import ProductIcon from './ProductIcon'
 import { productOptions } from './productOptions'
 
-const storageName = 'cookit.fridge-products'
+function mergeProducts(products, addedProducts) {
+  const savedProducts = [...products]
 
-const firstProducts = [
-  { id: 1, ...productOptions[0], quantity: 500, unit: 'g' },
-  { id: 2, ...productOptions[1], quantity: 1, unit: 'kg' },
-  { id: 3, ...productOptions[2], quantity: 3, unit: 'pcs' },
-  { id: 4, ...productOptions[3], quantity: 1, unit: 'l' },
-  { id: 5, ...productOptions[4], quantity: 6, unit: 'pcs' },
-  { id: 6, ...productOptions[5], quantity: 200, unit: 'g' },
-]
+  addedProducts.forEach((addedProduct) => {
+    const existingIndex = savedProducts.findIndex(
+      (product) => product.name === addedProduct.name
+    )
 
-function getSavedProducts() {
-  try {
-    const savedProducts = JSON.parse(localStorage.getItem(storageName))
-    return Array.isArray(savedProducts) ? savedProducts : firstProducts
-  } catch {
-    return firstProducts
-  }
+    if (existingIndex === -1) {
+      savedProducts.push(addedProduct)
+      return
+    }
+
+    savedProducts[existingIndex] = {
+      ...savedProducts[existingIndex],
+      quantity: addedProduct.quantity,
+      unit: addedProduct.unit,
+    }
+  })
+
+  return savedProducts
 }
 
-export default function MyFridgePage() {
-  const [products, setProducts] = useState(getSavedProducts)
+export default function MyFridgePage({ products, onProductsChange }) {
   const [searchText, setSearchText] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [productSearch, setProductSearch] = useState('')
@@ -32,10 +34,6 @@ export default function MyFridgePage() {
   const [addedProducts, setAddedProducts] = useState([])
   const [quantity, setQuantity] = useState(1)
   const [unit, setUnit] = useState('pcs')
-
-  useEffect(() => {
-    localStorage.setItem(storageName, JSON.stringify(products))
-  }, [products])
 
   const visibleProducts = products.filter((product) =>
     product.name.toLowerCase().includes(searchText.trim().toLowerCase())
@@ -45,7 +43,7 @@ export default function MyFridgePage() {
     product.name.toLowerCase().includes(productSearch.trim().toLowerCase())
   )
 
-  const productsForSummary = [...products, ...addedProducts]
+  const productsForSummary = products
   const stockedPercentage = Math.min(
     Math.round((productsForSummary.length / productOptions.length) * 100),
     100
@@ -62,7 +60,7 @@ export default function MyFridgePage() {
 
   function closeModal() {
     if (addedProducts.length > 0) {
-      setProducts([...products, ...addedProducts])
+      onProductsChange(mergeProducts(products, addedProducts))
     }
 
     setIsModalOpen(false)
@@ -75,12 +73,12 @@ export default function MyFridgePage() {
       return
     }
 
-    const productIsAdded = addedProducts.some((product) => product.id === selectedProduct.id)
+    const productIsAdded = addedProducts.some((product) => product.name === selectedProduct.name)
 
     if (productIsAdded) {
       setAddedProducts(
         addedProducts.map((product) =>
-          product.id === selectedProduct.id
+          product.name === selectedProduct.name
             ? { ...product, quantity: Number(quantity), unit }
             : product
         )
@@ -119,14 +117,20 @@ export default function MyFridgePage() {
   }
 
   function isProductAdded(product) {
-    return (
-      products.some((item) => item.name === product.name) ||
-      addedProducts.some((item) => item.name === product.name)
-    )
+    return products.some((item) => item.name === product.name)
+      || addedProducts.some((item) => item.name === product.name)
   }
 
   function removeProduct(id) {
-    setProducts(products.filter((product) => product.id !== id))
+    onProductsChange(products.filter((product) => product.id !== id))
+  }
+
+  function changeQuantity(id, amount) {
+    onProductsChange(products.map((product) => (
+      product.id === id
+        ? { ...product, quantity: Math.max(0.1, Number(product.quantity) + amount) }
+        : product
+    )))
   }
 
   return (
@@ -155,7 +159,11 @@ export default function MyFridgePage() {
               <article className="fridge-product" key={product.id}>
                 <ProductIcon product={product} />
                 <p>{product.name}</p>
-                <strong>{product.quantity} {product.unit}</strong>
+                <div className="product-quantity-controls">
+                  <button aria-label={`Decrease ${product.name} quantity`} onClick={() => changeQuantity(product.id, -1)} type="button"><Minus aria-hidden="true" /></button>
+                  <strong>{product.quantity} {product.unit}</strong>
+                  <button aria-label={`Increase ${product.name} quantity`} onClick={() => changeQuantity(product.id, 1)} type="button"><Plus aria-hidden="true" /></button>
+                </div>
                 <button
                   aria-label={`Remove ${product.name}`}
                   className="remove-product-button"
