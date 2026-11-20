@@ -8,6 +8,8 @@ import {
 } from './api/meals'
 import FavoritesPage from './pages/Favorites/FavoritesPage'
 import MyFridgePage from './pages/MyFridge/MyFridgePage'
+import ProductIcon from './pages/MyFridge/ProductIcon'
+import { fridgeStorageName, getSavedProducts } from './pages/MyFridge/fridgeStorage'
 import ProfilePage from './pages/Profile/ProfilePage'
 import RecipesPage from './pages/Recipes/RecipesPage'
 import './App.css'
@@ -25,18 +27,9 @@ const menuItems = [
 ]
 
 const demoPages = {
-  '/my-fridge': MyFridgePage,
-  '/recipes': RecipesPage,
   '/favorites': FavoritesPage,
   '/profile': ProfilePage,
 }
-
-const homeRecipes = [
-  { id: 'chicken', name: 'Chicken', image: '🍗' },
-  { id: 'pasta', name: 'Pasta', image: '🍝' },
-  { id: 'soup', name: 'Soup', image: '🍲' },
-  { id: 'vegetables', name: 'Vegetables', image: '🥗' },
-]
 
 function getRecipeDetails(recipe) {
   let ingredients = 0
@@ -194,6 +187,12 @@ export default function App() {
   const [message, setMessage] = useState('')
   const [page, setPage] = useState('home')
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
+  const [fridgeProducts, setFridgeProducts] = useState(getSavedProducts)
+
+  function updateFridgeProducts(products) {
+    setFridgeProducts(products)
+    localStorage.setItem(fridgeStorageName, JSON.stringify(products))
+  }
 
   useEffect(() => {
     function showPreviousPage() {
@@ -202,6 +201,22 @@ export default function App() {
 
     window.addEventListener('popstate', showPreviousPage)
     return () => window.removeEventListener('popstate', showPreviousPage)
+  }, [])
+
+  useEffect(() => {
+    let pageIsOpen = true
+
+    async function loadRecommendedRecipes() {
+      try {
+        const recipes = await getRecommendedRecipes()
+        if (pageIsOpen) setRecommendedRecipes(recipes)
+      } catch {
+        if (pageIsOpen) setRecommendedRecipes([])
+      }
+    }
+
+    loadRecommendedRecipes()
+    return () => { pageIsOpen = false }
   }, [])
 
   useEffect(() => {
@@ -368,6 +383,27 @@ export default function App() {
   }
 
   const recipeDetails = recipe ? getRecipeDetails(recipe) : null
+  if (currentPath === '/my-fridge') {
+    return (
+      <div className="page demo-layout">
+        <Sidebar currentPath={currentPath} goToPage={goToPage} />
+        <MyFridgePage products={fridgeProducts} onProductsChange={updateFridgeProducts} />
+      </div>
+    )
+  }
+
+  if (currentPath === '/recipes') {
+    return (
+      <div className="page demo-layout">
+        <Sidebar currentPath={currentPath} goToPage={goToPage} />
+        <RecipesPage
+          products={fridgeProducts}
+          onEditIngredients={() => goToPage('/my-fridge')}
+        />
+      </div>
+    )
+  }
+
   const DemoPage = demoPages[currentPath]
 
   if (DemoPage) {
@@ -502,14 +538,17 @@ export default function App() {
         <section className="fridge" id="fridge">
           <h2>My fridge</h2>
           <div className="ingredients">
-            <div className="ingredient">🥚<p>Eggs</p></div>
-            <div className="ingredient">🥛<p>Milk</p></div>
-            <div className="ingredient">🥕<p>Carrots</p></div>
-            <div className="ingredient">🍎<p>Apples</p></div>
-            <div className="ingredient">🧀<p>Cheese</p></div>
+            {fridgeProducts.length > 0 ? fridgeProducts.map((product) => (
+              <div className="ingredient" key={product.id}>
+                <ProductIcon product={product} />
+                <p>{product.name}</p>
+              </div>
+            )) : <p className="home-fridge-empty">Your fridge is empty. Add products to find matching recipes.</p>}
           </div>
 
-          <a className="button" href="#recipes">Find a recipe</a>
+          <button className="button" onClick={() => goToPage('/recipes')} type="button">
+            Find a recipe
+          </button>
         </section>
 
         <section className="recipes" id="recipes">
@@ -518,11 +557,15 @@ export default function App() {
           {message && <p>{message}</p>}
 
           <div className="recipe-list">
-            {homeRecipes.map((item) => (
-              <article className="recipe-card" key={item.id}>
-                <div className="card-image">{item.image}</div>
-                <h3>{item.name}</h3>
-              </article>
+            {recommendedRecipes.slice(0, 4).map((item) => (
+              <button
+                className="recipe-card"
+                key={item.idMeal}
+                onClick={() => openRecipe(item)}
+                type="button">
+                <img src={item.strMealThumb} alt={item.strMeal} />
+                <h3>{item.strMeal}</h3>
+              </button>
             ))}
 
             <button className="view-all" onClick={showAllRecipes} type="button">
