@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Clock, EditPencil, Search, User } from 'iconoir-react'
 import ProductIcon from '../MyFridge/ProductIcon'
 import { searchRecipes } from '../../api/meals'
+import FavoriteButton from '../Favorites/FavoriteButton'
 
 const mealTypes = ['All meals', 'Breakfast', 'Lunch', 'Dinner', 'Something sweet']
 const cookingTimes = ['Any time', 'Under 20 min', 'Under 40 min', 'Slow & steady']
@@ -51,7 +52,7 @@ function recipeMatchesFilters(recipe, recipeSearchText, selectedMeal, cookingTim
   return nameMatches && mealMatches && timeMatches
 }
 
-export default function RecipesPage({ products, onEditIngredients, onOpenRecipe }) {
+export default function RecipesPage({ products, onEditIngredients, onOpenRecipe, onToggleFavorite, isFavorite }) {
   const [recipesWithIngredientMatches, setRecipesWithIngredientMatches] = useState([])
   const [recipeLoadingStatus, setRecipeLoadingStatus] = useState('idle')
   const [recipeSearchText, setRecipeSearchText] = useState('')
@@ -157,21 +158,19 @@ export default function RecipesPage({ products, onEditIngredients, onOpenRecipe 
 
       <div className="ingredient-recipe-grid">
         {visibleRecipes.map((recipe) => (
-          <button
-            className="ingredient-recipe-card"
-            key={recipe.idMeal}
-            onClick={() => onOpenRecipe(recipe)}
-            type="button"
-          >
-            <img alt={recipe.strMeal} src={recipe.strMealThumb} />
-            <div>
+          <article className="ingredient-recipe-card" key={recipe.idMeal}>
+            <button className="ingredient-recipe-open" onClick={() => onOpenRecipe(recipe)} type="button">
+              <img alt={recipe.strMeal} src={recipe.strMealThumb} />
+              <div>
               <h2>{recipe.strMeal}</h2>
               <p>
                 <Clock aria-hidden="true" /> {getCookingTime(recipe)} min
                 <User aria-hidden="true" /> {recipe.matchingIngredientCount} ingredient match{recipe.matchingIngredientCount > 1 ? 'es' : ''}
               </p>
-            </div>
-          </button>
+              </div>
+            </button>
+            <FavoriteButton isFavorite={isFavorite(recipe)} onClick={() => onToggleFavorite(recipe)} recipeName={recipe.strMeal} />
+          </article>
         ))}
       </div>
     </main>
