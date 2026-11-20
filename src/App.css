@@ -33,6 +33,10 @@ a {
 .sidebar {
   display: flex;
   flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 .sidebar h1 {
@@ -785,6 +789,9 @@ button.history-item {
 
   .sidebar {
     padding: 20px;
+    position: static;
+    height: auto;
+    overflow: visible;
   }
 
   .sidebar nav {
