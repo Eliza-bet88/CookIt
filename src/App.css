@@ -1191,6 +1191,178 @@ button.history-item {
   color: #789083;
 }
 
+.profile-page {
+  grid-column: 2 / -1;
+  min-height: 100vh;
+  padding: 42px 40px;
+  background: #f4faf1;
+}
+
+.profile-summary {
+  padding: 28px;
+  border-radius: 28px;
+  background: #dfe9da;
+}
+
+.profile-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-avatar {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #61977a;
+  color: #fff;
+}
+
+.profile-avatar svg { width: 26px; }
+
+.profile-heading h1 {
+  margin: 0;
+  color: #294536;
+  font-size: 35px;
+}
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.profile-stats article {
+  display: grid;
+  grid-template-columns: 40px auto;
+  column-gap: 11px;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 15px;
+  background: #fff;
+}
+
+.profile-stats svg {
+  grid-row: 1 / span 2;
+  width: 40px;
+  height: 40px;
+  padding: 10px;
+  border-radius: 11px;
+  background: #ffd3a2;
+  color: #9b6230;
+}
+
+.profile-stats strong { color: #294536; font-size: 19px; }
+.profile-stats span { color: #718377; font-size: 14px; }
+
+.profile-panel {
+  border: 1px solid #dce6d8;
+  border-radius: 22px;
+  background: #fff;
+}
+
+.profile-panel header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #dce6d8;
+}
+
+.profile-panel h2 {
+  margin: 0;
+  color: #294536;
+  font-size: 25px;
+}
+
+.profile-panel header button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: #397750;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.profile-panel header button svg { width: 17px; }
+
+.personal-information {
+  margin-top: 34px;
+  padding: 20px 24px 25px;
+}
+
+.personal-information-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 25px 50px;
+  padding-top: 24px;
+}
+
+.personal-information-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.personal-information-item > span {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #e99a96;
+}
+
+.personal-information-item p {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  color: #718377;
+}
+
+.personal-information-item strong {
+  color: #294536;
+  font-size: 18px;
+}
+
+.profile-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin-top: 28px;
+}
+
+.preferences-panel,
+.notes-panel { padding: 20px 22px; }
+
+.preference-group { margin-top: 19px; }
+.preference-group h3 { margin: 0 0 10px; color: #718377; font-size: 15px; }
+.preference-group div { display: flex; flex-wrap: wrap; gap: 8px; }
+.preference-group span {
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: #edf3e9;
+  color: #315941;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.notes-lines {
+  display: grid;
+  gap: 24px;
+  padding-top: 30px;
+}
+
+.notes-lines span { border-bottom: 1px solid #dce6d8; }
+
 .ingredient-recipe-card:hover {
   box-shadow: 0 10px 22px rgba(47, 92, 60, 0.14);
   transform: translateY(-2px);
@@ -1289,6 +1461,18 @@ button.history-item {
 
   .favorite-recipe-content h2 { font-size: 19px; }
   .favorite-recipe-content button { margin-top: 12px; }
+
+  .profile-page {
+    grid-column: auto;
+    padding: 28px 20px;
+  }
+
+  .profile-summary { padding: 20px; }
+  .profile-heading h1 { font-size: 28px; }
+  .profile-stats,
+  .personal-information-grid,
+  .profile-bottom-grid { grid-template-columns: 1fr; }
+  .profile-stats { gap: 10px; }
 }
 
 .fridge-page h1 {

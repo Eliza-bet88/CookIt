@@ -29,7 +29,6 @@ const menuItems = [
 ]
 
 const demoPages = {
-  '/profile': ProfilePage,
 }
 
 function getSavedFavoriteRecipes() {
@@ -467,6 +466,18 @@ export default function App() {
           onToggleFavorite={toggleFavoriteRecipe}
         />
         <RecipeDialog recipe={openedRecipe} status={openedRecipeStatus} onClose={closeRecipe} isFavorite={isFavoriteRecipe} onToggleFavorite={toggleFavoriteRecipe} />
+      </div>
+    )
+  }
+
+  if (currentPath === '/profile') {
+    return (
+      <div className="page demo-layout">
+        <Sidebar currentPath={currentPath} goToPage={goToPage} />
+        <ProfilePage
+          favoriteCount={favoriteRecipes.length}
+          viewedRecipeCount={recipeHistory.length}
+        />
       </div>
     )
   }
