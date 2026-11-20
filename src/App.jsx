@@ -262,7 +262,7 @@ export default function App() {
 
     async function loadRecommendedRecipes() {
       try {
-        const recipes = await getRecommendedRecipes()
+        const recipes = await getRecommendedRecipes(userProfile.favoriteCuisines)
         if (pageIsOpen) setRecommendedRecipes(recipes)
       } catch {
         if (pageIsOpen) setRecommendedRecipes([])
@@ -271,7 +271,7 @@ export default function App() {
 
     loadRecommendedRecipes()
     return () => { pageIsOpen = false }
-  }, [])
+  }, [userProfile.favoriteCuisines])
 
   useEffect(() => {
     let pageIsOpen = true
@@ -354,6 +354,12 @@ export default function App() {
     setRecipeHistory([])
     localStorage.removeItem(historyStorageName)
     setIsHistoryOpen(false)
+  }
+
+  function removeRecipeFromHistory(recipeId) {
+    const updatedHistory = recipeHistory.filter((recipe) => recipe.idMeal !== recipeId)
+    setRecipeHistory(updatedHistory)
+    localStorage.setItem(historyStorageName, JSON.stringify(updatedHistory))
   }
 
   async function openRecipe(recipeToOpen) {
@@ -484,10 +490,15 @@ export default function App() {
         <ProfilePage
           favoriteCount={favoriteRecipes.length}
           onOpenFavorites={() => goToPage('/favorites')}
+          onOpenRecipe={openRecipe}
+          onRemoveRecipeFromHistory={removeRecipeFromHistory}
           profile={userProfile}
+          recipeHistory={recipeHistory}
           onProfileChange={updateUserProfile}
+          onClearRecipeHistory={clearRecipeHistory}
           viewedRecipeCount={recipeHistory.length}
         />
+        <RecipeDialog recipe={openedRecipe} status={openedRecipeStatus} onClose={closeRecipe} isFavorite={isFavoriteRecipe} onToggleFavorite={toggleFavoriteRecipe} />
       </div>
     )
   }

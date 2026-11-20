@@ -50,9 +50,28 @@ export async function searchRecipes(searchText) {
   return [...recipes.values()]
 }
 
-export async function getRecommendedRecipes() {
-  const recipes = await searchRecipes('chicken')
-  return recipes.slice(0, 10)
+const cuisineAreas = {
+  Asian: ['Chinese', 'Japanese', 'Korean', 'Thai', 'Vietnamese'],
+  European: ['British', 'French', 'Greek', 'Italian', 'Polish', 'Portuguese', 'Spanish'],
+  American: ['American', 'Canadian', 'Mexican'],
+  Italian: ['Italian'],
+  Indian: ['Indian'],
+  MiddleEastern: ['Turkish'],
+  Caribbean: ['Jamaican'],
+}
+
+export async function getRecommendedRecipes(favoriteCuisines = []) {
+  const areas = favoriteCuisines.flatMap((cuisine) => cuisineAreas[cuisine] ?? [])
+  const preferredRecipeLists = await Promise.all(
+    areas.map((area) => getMeals(`https://www.themealdb.com/api/json/v1/1/filter.php?a=${encodeURIComponent(area)}`))
+  )
+  const chickenRecipes = await searchRecipes('chicken')
+  const recipesById = new Map()
+
+  preferredRecipeLists.flat().forEach((recipe) => recipesById.set(recipe.idMeal, recipe))
+  chickenRecipes.forEach((recipe) => recipesById.set(recipe.idMeal, recipe))
+
+  return [...recipesById.values()].slice(0, 10)
 }
 
 export async function getDailyRecipe() {

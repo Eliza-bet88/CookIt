@@ -557,7 +557,7 @@ button.history-item {
 
 .recipe-dialog-backdrop {
   position: fixed;
-  z-index: 20;
+  z-index: 50;
   inset: 0;
   display: grid;
   place-items: center;
@@ -1225,7 +1225,7 @@ button.history-item {
 .profile-heading h1 {
   margin: 0;
   color: #294536;
-  font-size: 35px;
+  font-size: 29px;
 }
 
 .profile-stats {
@@ -1284,7 +1284,7 @@ button.history-item {
 .profile-panel h2 {
   margin: 0;
   color: #294536;
-  font-size: 25px;
+  font-size: 21px;
 }
 
 .profile-panel header button {
@@ -1343,13 +1343,16 @@ button.history-item {
 
 .profile-bottom-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 28px;
   margin-top: 28px;
 }
 
 .preferences-panel,
-.notes-panel { padding: 20px 22px; }
+.notes-panel {
+  min-width: 0;
+  padding: 20px 22px;
+}
 
 .preference-group { margin-top: 19px; }
 .preference-group h3 { margin: 0 0 10px; color: #718377; font-size: 15px; }
@@ -1365,6 +1368,7 @@ button.history-item {
 
 .notes-lines {
   display: grid;
+  width: 100%;
   gap: 24px;
   padding-top: 30px;
 }
@@ -1377,6 +1381,7 @@ button.history-item {
   color: #426653;
   line-height: 1.55;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .profile-modal-backdrop {
@@ -1403,7 +1408,7 @@ button.history-item {
 .profile-modal h2 {
   margin: 0;
   color: #20593d;
-  font-size: 38px;
+  font-size: 30px;
 }
 
 .profile-modal > p {
@@ -1412,7 +1417,7 @@ button.history-item {
   font-size: 18px;
 }
 
-.profile-modal h3 { margin: 22px 0 12px; color: #294536; font-size: 20px; }
+.profile-modal h3 { margin: 22px 0 12px; color: #294536; font-size: 18px; }
 
 .profile-modal-close {
   position: absolute;
@@ -1444,6 +1449,7 @@ button.history-item {
 }
 
 .profile-form-grid input,
+.profile-form-grid select,
 .ingredient-search,
 .profile-modal textarea {
   border: 1px solid #cdddc8;
@@ -1453,7 +1459,13 @@ button.history-item {
   font: inherit;
 }
 
-.profile-form-grid input { min-height: 50px; padding: 0 14px; }
+.profile-form-grid input {
+  width: 100%;
+  min-height: 50px;
+  padding: 0 14px;
+}
+.profile-form-grid select { width: 100%; min-height: 50px; padding: 0 14px; }
+.profile-form-grid input:disabled { background: #eef2ed; color: #718377; }
 
 .choice-list {
   display: flex;
@@ -1528,6 +1540,13 @@ button.history-item {
   resize: vertical;
 }
 
+.notes-character-count {
+  margin: 7px 0 0 !important;
+  color: #718377;
+  font-size: 14px !important;
+  text-align: right;
+}
+
 .modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -1550,6 +1569,65 @@ button.history-item {
 }
 
 .modal-actions button:last-child { background: #397750; color: #fff; }
+
+.profile-history-list {
+  display: grid;
+  gap: 10px;
+}
+
+.profile-history-list article {
+  display: grid;
+  grid-template-columns: 1fr 42px;
+  align-items: center;
+  gap: 10px;
+  padding: 7px;
+  border-radius: 14px;
+  background: #f7fbf4;
+}
+
+.profile-history-list article > button:first-child {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  background: transparent;
+  color: #294536;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.profile-history-list img {
+  width: 54px;
+  height: 54px;
+  border-radius: 11px;
+  object-fit: cover;
+}
+
+.profile-history-list article > button:last-child {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #db7773;
+  cursor: pointer;
+}
+
+.clear-profile-history {
+  display: block;
+  margin: 22px 0 0 auto;
+  padding: 10px 15px;
+  border: 1px solid #397750;
+  border-radius: 999px;
+  background: #fff;
+  color: #397750;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
 
 .ingredient-recipe-card:hover {
   box-shadow: 0 10px 22px rgba(47, 92, 60, 0.14);

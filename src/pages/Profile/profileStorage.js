@@ -4,7 +4,7 @@ export const defaultUserProfile = {
   fullName: 'User Name',
   email: 'user_name@gmail.com',
   location: 'Latvia, Riga',
-  memberSince: 'May 2025',
+  memberSince: new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date()),
   cookingLevel: 'Beginner',
   weeklyGoal: '5 times a week',
   favoriteCuisines: [],
