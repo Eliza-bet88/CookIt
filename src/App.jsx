@@ -12,6 +12,7 @@ import MyFridgePage from './pages/MyFridge/MyFridgePage'
 import ProductIcon from './pages/MyFridge/ProductIcon'
 import { fridgeStorageName, getSavedProducts } from './pages/MyFridge/fridgeStorage'
 import ProfilePage from './pages/Profile/ProfilePage'
+import { getSavedUserProfile, profileStorageName } from './pages/Profile/profileStorage'
 import RecipesPage from './pages/Recipes/RecipesPage'
 import './App.css'
 
@@ -171,7 +172,7 @@ function RecipeCard({ recipe, isFavorite, onOpenRecipe, onToggleFavorite }) {
   )
 }
 
-function Sidebar({ currentPath, goToPage }) {
+function Sidebar({ currentPath, goToPage, userName }) {
   return (
     <aside className="sidebar">
       <h1>CookIt</h1>
@@ -193,7 +194,7 @@ function Sidebar({ currentPath, goToPage }) {
           )
         })}
       </nav>
-      <p className="user-name">User Name</p>
+      <p className="user-name">{userName}</p>
     </aside>
   )
 }
@@ -221,6 +222,7 @@ export default function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
   const [fridgeProducts, setFridgeProducts] = useState(getSavedProducts)
   const [favoriteRecipes, setFavoriteRecipes] = useState(getSavedFavoriteRecipes)
+  const [userProfile, setUserProfile] = useState(getSavedUserProfile)
 
   function updateFridgeProducts(products) {
     setFridgeProducts(products)
@@ -239,6 +241,11 @@ export default function App() {
 
     setFavoriteRecipes(updatedFavoriteRecipes)
     localStorage.setItem(favoritesStorageName, JSON.stringify(updatedFavoriteRecipes))
+  }
+
+  function updateUserProfile(updatedProfile) {
+    setUserProfile(updatedProfile)
+    localStorage.setItem(profileStorageName, JSON.stringify(updatedProfile))
   }
 
   useEffect(() => {
@@ -433,7 +440,7 @@ export default function App() {
   if (currentPath === '/my-fridge') {
     return (
       <div className="page demo-layout">
-        <Sidebar currentPath={currentPath} goToPage={goToPage} />
+        <Sidebar currentPath={currentPath} goToPage={goToPage} userName={userProfile.fullName} />
         <MyFridgePage products={fridgeProducts} onProductsChange={updateFridgeProducts} />
       </div>
     )
@@ -442,7 +449,7 @@ export default function App() {
   if (currentPath === '/recipes') {
     return (
       <div className="page demo-layout">
-        <Sidebar currentPath={currentPath} goToPage={goToPage} />
+        <Sidebar currentPath={currentPath} goToPage={goToPage} userName={userProfile.fullName} />
         <RecipesPage
           onOpenRecipe={openRecipe}
           isFavorite={isFavoriteRecipe}
@@ -458,7 +465,7 @@ export default function App() {
   if (currentPath === '/favorites') {
     return (
       <div className="page demo-layout">
-        <Sidebar currentPath={currentPath} goToPage={goToPage} />
+        <Sidebar currentPath={currentPath} goToPage={goToPage} userName={userProfile.fullName} />
         <FavoritesPage
           favoriteRecipes={favoriteRecipes}
           isFavorite={isFavoriteRecipe}
@@ -473,9 +480,12 @@ export default function App() {
   if (currentPath === '/profile') {
     return (
       <div className="page demo-layout">
-        <Sidebar currentPath={currentPath} goToPage={goToPage} />
+        <Sidebar currentPath={currentPath} goToPage={goToPage} userName={userProfile.fullName} />
         <ProfilePage
           favoriteCount={favoriteRecipes.length}
+          onOpenFavorites={() => goToPage('/favorites')}
+          profile={userProfile}
+          onProfileChange={updateUserProfile}
           viewedRecipeCount={recipeHistory.length}
         />
       </div>
@@ -487,7 +497,7 @@ export default function App() {
   if (DemoPage) {
     return (
       <div className="page demo-layout">
-        <Sidebar currentPath={currentPath} goToPage={goToPage} />
+        <Sidebar currentPath={currentPath} goToPage={goToPage} userName={userProfile.fullName} />
         <DemoPage />
       </div>
     )
@@ -555,7 +565,7 @@ export default function App() {
 
   return (
     <div className="page">
-      <Sidebar currentPath={currentPath} goToPage={goToPage} />
+      <Sidebar currentPath={currentPath} goToPage={goToPage} userName={userProfile.fullName} />
 
       <main className="content" id="home">
         <form className="search" onSubmit={searchRecipe}>

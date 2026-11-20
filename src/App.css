@@ -1235,7 +1235,8 @@ button.history-item {
   margin-top: 24px;
 }
 
-.profile-stats article {
+.profile-stats article,
+.profile-stats button {
   display: grid;
   grid-template-columns: 40px auto;
   column-gap: 11px;
@@ -1243,6 +1244,13 @@ button.history-item {
   padding: 14px 16px;
   border-radius: 15px;
   background: #fff;
+}
+
+.profile-stats button {
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
 }
 
 .profile-stats svg {
@@ -1362,6 +1370,186 @@ button.history-item {
 }
 
 .notes-lines span { border-bottom: 1px solid #dce6d8; }
+
+.saved-notes {
+  min-height: 144px;
+  margin: 20px 0 0;
+  color: #426653;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.profile-modal-backdrop {
+  position: fixed;
+  z-index: 40;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(29, 54, 39, 0.48);
+}
+
+.profile-modal {
+  position: relative;
+  width: min(780px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  padding: 38px;
+  border-radius: 26px;
+  background: #fff;
+  box-shadow: 0 20px 55px rgba(20, 48, 30, 0.28);
+}
+
+.profile-modal h2 {
+  margin: 0;
+  color: #20593d;
+  font-size: 38px;
+}
+
+.profile-modal > p {
+  margin: 9px 0 28px;
+  color: #718377;
+  font-size: 18px;
+}
+
+.profile-modal h3 { margin: 22px 0 12px; color: #294536; font-size: 20px; }
+
+.profile-modal-close {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: #edf3e9;
+  color: #397750;
+  cursor: pointer;
+}
+
+.profile-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 28px;
+}
+
+.profile-form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #294536;
+  font-weight: 700;
+}
+
+.profile-form-grid input,
+.ingredient-search,
+.profile-modal textarea {
+  border: 1px solid #cdddc8;
+  border-radius: 14px;
+  background: #fff;
+  color: #294536;
+  font: inherit;
+}
+
+.profile-form-grid input { min-height: 50px; padding: 0 14px; }
+
+.choice-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.choice-list button,
+.choice-list span {
+  min-height: 42px;
+  padding: 0 17px;
+  border: 0;
+  border-radius: 999px;
+  background: #edf3e9;
+  color: #315941;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.choice-list .selected-choice { background: #397750; color: #fff; }
+.choice-list .add-more-button { border: 1px solid #397750; background: #fff; }
+.choice-list svg { width: 19px; vertical-align: middle; }
+
+.ingredient-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 15px;
+}
+
+.ingredient-search input {
+  width: 100%;
+  min-height: 50px;
+  border: 0;
+  outline: 0;
+  color: #294536;
+  font: inherit;
+}
+
+.ingredient-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  max-height: 330px;
+  overflow: auto;
+  margin-top: 18px;
+}
+
+.ingredient-options button {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 5px;
+  min-height: 105px;
+  padding: 9px;
+  border: 1px solid #dce6d8;
+  border-radius: 14px;
+  background: #fff;
+  color: #294536;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.ingredient-options .selected-ingredient { border-color: #397750; background: #edf8e9; }
+
+.profile-modal textarea {
+  width: 100%;
+  min-height: 220px;
+  padding: 16px;
+  resize: vertical;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 13px;
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid #dce6d8;
+}
+
+.modal-actions button {
+  min-width: 130px;
+  padding: 12px 18px;
+  border: 1px solid #397750;
+  border-radius: 999px;
+  background: #fff;
+  color: #397750;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.modal-actions button:last-child { background: #397750; color: #fff; }
 
 .ingredient-recipe-card:hover {
   box-shadow: 0 10px 22px rgba(47, 92, 60, 0.14);
