@@ -16,7 +16,7 @@ export default function FavoritesPage({ favoriteRecipes, isFavorite, onOpenRecip
         <Search aria-hidden="true" />
         <input
           onChange={(event) => setSearchText(event.target.value)}
-          placeholder="Search recipes or ingredients..."
+          placeholder="Search your favorites..."
           value={searchText}
         />
       </label>
@@ -27,16 +27,21 @@ export default function FavoritesPage({ favoriteRecipes, isFavorite, onOpenRecip
         <div className="favorites-list">
           {visibleRecipes.map((recipe) => (
             <article className="favorite-recipe-card" key={recipe.idMeal}>
-              <img alt={recipe.strMeal} src={recipe.strMealThumb} />
+              <div className="favorite-recipe-image">
+                <img alt={recipe.strMeal} src={recipe.strMealThumb} />
+                <FavoriteButton
+                  isFavorite={isFavorite(recipe)}
+                  onClick={() => onToggleFavorite(recipe)}
+                  recipeName={recipe.strMeal}
+                />
+              </div>
               <div className="favorite-recipe-content">
                 <h2>{recipe.strMeal}</h2>
-                <button onClick={() => onOpenRecipe(recipe)} type="button">View recipe</button>
+                <div className="favorite-recipe-details">
+                  {recipe.strArea && <span>{recipe.strArea} cuisine</span>}
+                </div>
+                <button onClick={() => onOpenRecipe(recipe)} type="button">View recipe <span aria-hidden="true">→</span></button>
               </div>
-              <FavoriteButton
-                isFavorite={isFavorite(recipe)}
-                onClick={() => onToggleFavorite(recipe)}
-                recipeName={recipe.strMeal}
-              />
             </article>
           ))}
         </div>
