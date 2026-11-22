@@ -19,6 +19,7 @@ import './App.css'
 const storageName = 'cookit.daily-recipe'
 const historyStorageName = 'cookit.recipe-history'
 const favoritesStorageName = 'cookit.favorite-recipes'
+const recommendedRecipesStorageName = 'cookit.recommended-recipes'
 const historyPreviewSize = 4
 
 const menuItems = [
@@ -35,6 +36,15 @@ const demoPages = {
 function getSavedFavoriteRecipes() {
   try {
     const savedRecipes = JSON.parse(localStorage.getItem(favoritesStorageName))
+    return Array.isArray(savedRecipes) ? savedRecipes : []
+  } catch {
+    return []
+  }
+}
+
+function getSavedRecommendedRecipes() {
+  try {
+    const savedRecipes = JSON.parse(localStorage.getItem(recommendedRecipesStorageName))
     return Array.isArray(savedRecipes) ? savedRecipes : []
   } catch {
     return []
@@ -204,7 +214,7 @@ export default function App() {
   const [dailyRecipeStatus, setDailyRecipeStatus] = useState('loading')
   const [searchText, setSearchText] = useState('')
   const [searchRecipesList, setSearchRecipesList] = useState([])
-  const [recommendedRecipes, setRecommendedRecipes] = useState([])
+  const [recommendedRecipes, setRecommendedRecipes] = useState(getSavedRecommendedRecipes)
   const [recipeHistory, setRecipeHistory] = useState(() => {
     try {
       const savedHistory = JSON.parse(localStorage.getItem(historyStorageName))
@@ -250,7 +260,9 @@ export default function App() {
 
   useEffect(() => {
     function showPreviousPage() {
-      setCurrentPath(window.location.pathname)
+      const path = window.location.pathname
+      setCurrentPath(path)
+      setPage(path === '/recommended' ? 'recommended' : path === '/search' ? 'search' : 'home')
     }
 
     window.addEventListener('popstate', showPreviousPage)
@@ -263,9 +275,12 @@ export default function App() {
     async function loadRecommendedRecipes() {
       try {
         const recipes = await getRecommendedRecipes(userProfile.favoriteCuisines)
-        if (pageIsOpen) setRecommendedRecipes(recipes)
+        if (pageIsOpen) {
+          setRecommendedRecipes(recipes)
+          localStorage.setItem(recommendedRecipesStorageName, JSON.stringify(recipes))
+        }
       } catch {
-        if (pageIsOpen) setRecommendedRecipes([])
+        return
       }
     }
 
@@ -398,6 +413,8 @@ export default function App() {
 
     try {
       setPage('search')
+      window.history.pushState({}, '', '/search')
+      setCurrentPath('/search')
       setMessage('Loading recipes...')
 
       const foundRecipes = await searchRecipes(text)
@@ -414,22 +431,10 @@ export default function App() {
     }
   }
 
-  async function showAllRecipes() {
-    try {
-      setPage('recommended')
-      setMessage('Loading recipes...')
-
-      const foundRecipes = await getRecommendedRecipes()
-
-      setRecommendedRecipes(foundRecipes)
-      setMessage('')
-    } catch {
-      setMessage('Could not load recipes')
-    }
-  }
-
-  function goHome() {
-    setPage('home')
+  function showAllRecipes() {
+    window.history.pushState({}, '', '/recommended')
+    setCurrentPath('/recommended')
+    setPage('recommended')
     setMessage('')
   }
 
@@ -518,10 +523,6 @@ export default function App() {
     return (
       <>
         <main className="result-page">
-        <button className="back-button" onClick={goHome} type="button">
-          ← Back
-        </button>
-
         <h1>Search results</h1>
         <p className="search-title">You searched for: {searchText}</p>
 
@@ -548,10 +549,6 @@ export default function App() {
     return (
       <>
         <main className="result-page">
-        <button className="back-button" onClick={goHome} type="button">
-          ← Back
-        </button>
-
         <h1>Recommended recipes</h1>
         <p className="search-title">More recipes for today</p>
 
@@ -670,10 +667,12 @@ export default function App() {
               />
             ))}
 
-            <button className="view-all" onClick={showAllRecipes} type="button">
-              <span>•••</span>
-              View all
-            </button>
+            {recommendedRecipes.length > 0 && (
+              <button className="view-all" onClick={showAllRecipes} type="button">
+                <span>•••</span>
+                View all
+              </button>
+            )}
           </div>
         </section>
       </main>

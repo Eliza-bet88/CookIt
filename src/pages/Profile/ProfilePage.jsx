@@ -231,7 +231,7 @@ export default function ProfilePage(props) {
           </div>
           {recipeHistory.length > 0 && (
             <button className="clear-profile-history" onClick={onClearRecipeHistory} type="button">
-              Clear all history
+              Clear history
             </button>
           )}
         </Modal>

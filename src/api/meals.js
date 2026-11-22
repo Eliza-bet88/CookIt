@@ -65,7 +65,7 @@ export async function getRecommendedRecipes(favoriteCuisines = []) {
   const preferredRecipeLists = await Promise.all(
     areas.map((area) => getMeals(`https://www.themealdb.com/api/json/v1/1/filter.php?a=${encodeURIComponent(area)}`))
   )
-  const chickenRecipes = await searchRecipes('chicken')
+  const chickenRecipes = await getMeals('https://www.themealdb.com/api/json/v1/1/filter.php?i=chicken')
   const recipesById = new Map()
 
   preferredRecipeLists.flat().forEach((recipe) => recipesById.set(recipe.idMeal, recipe))
