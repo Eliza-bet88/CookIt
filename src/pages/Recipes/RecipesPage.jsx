@@ -1,63 +1,76 @@
 import { useEffect, useState } from 'react'
-import { Clock, EditPencil, Search, User } from 'iconoir-react'
+import { EditPencil, User } from 'iconoir-react'
 import ProductIcon from '../MyFridge/ProductIcon'
 import { searchRecipes } from '../../api/meals'
 import FavoriteButton from '../Favorites/FavoriteButton'
 
-const mealTypes = ['All meals', 'Breakfast', 'Lunch', 'Dinner', 'Something sweet']
-const cookingTimes = ['Any time', 'Under 20 min', 'Under 40 min', 'Slow & steady']
+const recipesStorageName = 'cookit.ingredient-recipes'
 
-function getCookingTime(recipe) {
-  let ingredients = 0
+function getRecipeKey(products) {
+  const productNames = []
 
-  for (let number = 1; number <= 20; number += 1) {
-    if (recipe[`strIngredient${number}`]) ingredients += 1
+  for (const product of products) {
+    productNames.push(product.name.toLowerCase())
   }
 
-  return Math.max(10, ingredients * 5)
+  productNames.sort()
+  return productNames.join('|')
+}
+
+function getSavedRecipes(key) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(recipesStorageName))
+
+    if (saved && saved.key === key && Array.isArray(saved.recipes)) {
+      return saved.recipes
+    }
+
+    return []
+  } catch {
+    return []
+  }
+}
+
+function saveRecipes(key, recipes) {
+  try {
+    localStorage.setItem(recipesStorageName, JSON.stringify({ key, recipes }))
+  } catch {
+    return
+  }
 }
 
 function getRecipesWithIngredientMatches(recipeLists) {
   const recipesById = new Map()
 
-  recipeLists.flat().forEach((recipe) => {
-    const savedRecipe = recipesById.get(recipe.idMeal)
-    const matchingIngredientCount = savedRecipe
-      ? savedRecipe.matchingIngredientCount + 1
-      : 1
+  for (const recipeList of recipeLists) {
+    for (const recipe of recipeList) {
+      const savedRecipe = recipesById.get(recipe.idMeal)
+      let matchingIngredientCount = 1
 
-    recipesById.set(recipe.idMeal, { ...recipe, matchingIngredientCount })
-  })
+      if (savedRecipe) {
+        matchingIngredientCount = savedRecipe.matchingIngredientCount + 1
+      }
 
-  return [...recipesById.values()].sort(
-    (first, second) => second.matchingIngredientCount - first.matchingIngredientCount
-  )
+      recipesById.set(recipe.idMeal, { ...recipe, matchingIngredientCount })
+    }
+  }
+
+  const recipes = [...recipesById.values()]
+  recipes.sort((first, second) => second.matchingIngredientCount - first.matchingIngredientCount)
+  return recipes
 }
 
-function recipeMatchesFilters(recipe, recipeSearchText, selectedMeal, cookingTime) {
-  const recipeTime = getCookingTime(recipe)
-  const nameMatches = recipe.strMeal.toLowerCase().includes(
-    recipeSearchText.trim().toLowerCase()
-  )
-  const selectedCategory = selectedMeal === 'Something sweet'
-    ? 'dessert'
-    : selectedMeal.toLowerCase()
-  const mealMatches = selectedMeal === 'All meals'
-    || recipe.strCategory?.toLowerCase().includes(selectedCategory)
-  const timeMatches = cookingTime === 'Any time'
-    || (cookingTime === 'Under 20 min' && recipeTime < 20)
-    || (cookingTime === 'Under 40 min' && recipeTime < 40)
-    || (cookingTime === 'Slow & steady' && recipeTime >= 40)
+function getIngredientMatchText(count) {
+  if (count === 1) {
+    return 'ingredient match'
+  }
 
-  return nameMatches && mealMatches && timeMatches
+  return 'ingredient matches'
 }
 
 export default function RecipesPage({ products, onEditIngredients, onOpenRecipe, onToggleFavorite, isFavorite }) {
   const [recipesWithIngredientMatches, setRecipesWithIngredientMatches] = useState([])
   const [recipeLoadingStatus, setRecipeLoadingStatus] = useState('idle')
-  const [recipeSearchText, setRecipeSearchText] = useState('')
-  const [selectedMeal, setSelectedMeal] = useState('All meals')
-  const [cookingTime, setCookingTime] = useState('Any time')
 
   useEffect(() => {
     let isPageOpen = true
@@ -69,16 +82,40 @@ export default function RecipesPage({ products, onEditIngredients, onOpenRecipe,
         return
       }
 
+      const key = getRecipeKey(products)
+      const savedRecipes = getSavedRecipes(key)
+
+      if (savedRecipes.length > 0) {
+        setRecipesWithIngredientMatches(savedRecipes)
+        setRecipeLoadingStatus('ready')
+        return
+      }
+
       setRecipeLoadingStatus('loading')
 
       try {
-        const recipeLists = await Promise.all(
-          products.map((product) => searchRecipes(product.name))
-        )
+        const recipeLists = []
 
-        if (isPageOpen) {
-          setRecipesWithIngredientMatches(getRecipesWithIngredientMatches(recipeLists))
-          setRecipeLoadingStatus('ready')
+        for (let index = 0; index < products.length; index += 3) {
+          const productGroup = products.slice(index, index + 3)
+          const results = await Promise.allSettled(
+            productGroup.map((product) => searchRecipes(product.name))
+          )
+
+          results.forEach((result) => {
+            if (result.status === 'fulfilled') recipeLists.push(result.value)
+          })
+
+          if (isPageOpen && recipeLists.length > 0) {
+            const recipes = getRecipesWithIngredientMatches(recipeLists)
+            saveRecipes(key, recipes)
+            setRecipesWithIngredientMatches(recipes)
+            setRecipeLoadingStatus('ready')
+          }
+        }
+
+        if (isPageOpen && recipeLists.length === 0) {
+          setRecipeLoadingStatus('error')
         }
       } catch {
         if (isPageOpen) setRecipeLoadingStatus('error')
@@ -89,10 +126,6 @@ export default function RecipesPage({ products, onEditIngredients, onOpenRecipe,
 
     return () => { isPageOpen = false }
   }, [products])
-
-  const visibleRecipes = recipesWithIngredientMatches.filter((recipe) => (
-    recipeMatchesFilters(recipe, recipeSearchText, selectedMeal, cookingTime)
-  ))
 
   return (
     <main className="recipes-page">
@@ -115,31 +148,6 @@ export default function RecipesPage({ products, onEditIngredients, onOpenRecipe,
         </div>
       </header>
 
-      <section className="recipe-filters" aria-label="Recipe filters">
-        <label className="recipes-search">
-          <Search aria-hidden="true" />
-          <input
-            onChange={(event) => setRecipeSearchText(event.target.value)}
-            placeholder="Search recipes..."
-            value={recipeSearchText}
-          />
-        </label>
-
-        <label>
-          <span>Meal</span>
-          <select onChange={(event) => setSelectedMeal(event.target.value)} value={selectedMeal}>
-            {mealTypes.map((item) => <option key={item}>{item}</option>)}
-          </select>
-        </label>
-
-        <label>
-          <span>Cooking time</span>
-          <select onChange={(event) => setCookingTime(event.target.value)} value={cookingTime}>
-            {cookingTimes.map((item) => <option key={item}>{item}</option>)}
-          </select>
-        </label>
-      </section>
-
       {recipeLoadingStatus === 'loading' && <p className="recipes-message">Looking for recipes with your ingredients…</p>}
 
       {recipeLoadingStatus === 'empty' && (
@@ -152,20 +160,19 @@ export default function RecipesPage({ products, onEditIngredients, onOpenRecipe,
 
       {recipeLoadingStatus === 'error' && <p className="recipes-message">Recipes could not be loaded. Please try again.</p>}
 
-      {recipeLoadingStatus === 'ready' && visibleRecipes.length === 0 && (
-        <p className="recipes-message">No recipes match these filters yet.</p>
+      {recipeLoadingStatus === 'ready' && recipesWithIngredientMatches.length === 0 && (
+        <p className="recipes-message">No recipes found with these ingredients yet.</p>
       )}
 
       <div className="ingredient-recipe-grid">
-        {visibleRecipes.map((recipe) => (
+        {recipesWithIngredientMatches.map((recipe) => (
           <article className="ingredient-recipe-card" key={recipe.idMeal}>
             <button className="ingredient-recipe-open" onClick={() => onOpenRecipe(recipe)} type="button">
               <img alt={recipe.strMeal} src={recipe.strMealThumb} />
               <div>
               <h2>{recipe.strMeal}</h2>
               <p>
-                <Clock aria-hidden="true" /> {getCookingTime(recipe)} min
-                <User aria-hidden="true" /> {recipe.matchingIngredientCount} ingredient match{recipe.matchingIngredientCount > 1 ? 'es' : ''}
+                <User aria-hidden="true" /> {recipe.matchingIngredientCount} {getIngredientMatchText(recipe.matchingIngredientCount)}
               </p>
               </div>
             </button>

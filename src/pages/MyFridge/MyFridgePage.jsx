@@ -26,6 +26,22 @@ function mergeProducts(products, addedProducts) {
   return savedProducts
 }
 
+function SelectedProductDetails({ product }) {
+  if (!product) {
+    return <p className="select-product-message">Choose a product from the list.</p>
+  }
+
+  return (
+    <div className="selected-product-card">
+      <ProductIcon product={product} />
+      <div>
+        <strong>{product.name}</strong>
+        <span>{product.type}</span>
+      </div>
+    </div>
+  )
+}
+
 export default function MyFridgePage({ products, onProductsChange }) {
   const [searchText, setSearchText] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -76,13 +92,17 @@ export default function MyFridgePage({ products, onProductsChange }) {
     const productIsAdded = addedProducts.some((product) => product.name === selectedProduct.name)
 
     if (productIsAdded) {
-      setAddedProducts(
-        addedProducts.map((product) =>
-          product.name === selectedProduct.name
-            ? { ...product, quantity: Number(quantity), unit }
-            : product
-        )
-      )
+      const updatedProducts = []
+
+      for (const product of addedProducts) {
+        if (product.name === selectedProduct.name) {
+          updatedProducts.push({ ...product, quantity: Number(quantity), unit })
+        } else {
+          updatedProducts.push(product)
+        }
+      }
+
+      setAddedProducts(updatedProducts)
       return
     }
 
@@ -99,17 +119,25 @@ export default function MyFridgePage({ products, onProductsChange }) {
 
   function selectProduct(product) {
     const addedProduct = addedProducts.find((item) => item.name === product.name)
-    const productToEdit = addedProduct ?? product
+    let productToEdit = product
+    let selectedQuantity = 1
+    let selectedUnit = 'pcs'
+
+    if (addedProduct) {
+      productToEdit = addedProduct
+      selectedQuantity = addedProduct.quantity
+      selectedUnit = addedProduct.unit
+    }
 
     setSelectedProduct(productToEdit)
-    setQuantity(addedProduct?.quantity ?? 1)
-    setUnit(addedProduct?.unit ?? 'pcs')
+    setQuantity(selectedQuantity)
+    setUnit(selectedUnit)
   }
 
   function removeAddedProduct(id) {
     setAddedProducts(addedProducts.filter((product) => product.id !== id))
 
-    if (selectedProduct?.id === id) {
+    if (selectedProduct && selectedProduct.id === id) {
       setSelectedProduct(null)
       setQuantity(1)
       setUnit('pcs')
@@ -121,16 +149,51 @@ export default function MyFridgePage({ products, onProductsChange }) {
       || addedProducts.some((item) => item.name === product.name)
   }
 
+  function getProductButtonClass(product) {
+    if (isProductAdded(product)) {
+      return 'selected-product'
+    }
+
+    if (selectedProduct && selectedProduct.name === product.name) {
+      return 'selected-product'
+    }
+
+    return ''
+  }
+
+  function getSaveButtonText() {
+    if (!selectedProduct) {
+      return 'Add'
+    }
+
+    const productWasAdded = addedProducts.some((product) => product.id === selectedProduct.id)
+
+    if (productWasAdded) {
+      return 'Save changes'
+    }
+
+    return 'Add'
+  }
+
   function removeProduct(id) {
     onProductsChange(products.filter((product) => product.id !== id))
   }
 
   function changeQuantity(id, amount) {
-    onProductsChange(products.map((product) => (
-      product.id === id
-        ? { ...product, quantity: Math.max(0.1, Number(product.quantity) + amount) }
-        : product
-    )))
+    const updatedProducts = []
+
+    for (const product of products) {
+      if (product.id === id) {
+        updatedProducts.push({
+          ...product,
+          quantity: Math.max(0.1, Number(product.quantity) + amount),
+        })
+      } else {
+        updatedProducts.push(product)
+      }
+    }
+
+    onProductsChange(updatedProducts)
   }
 
   return (
@@ -249,11 +312,7 @@ export default function MyFridgePage({ products, onProductsChange }) {
                 <div className="product-options">
                   {visibleOptions.map((product) => (
                     <button
-                      className={
-                        isProductAdded(product) || selectedProduct?.name === product.name
-                          ? 'selected-product'
-                          : ''
-                      }
+                      className={getProductButtonClass(product)}
                       key={product.name}
                       onClick={() => selectProduct(product)}
                       type="button"
@@ -267,17 +326,7 @@ export default function MyFridgePage({ products, onProductsChange }) {
 
               <div className="product-details">
                 <h3>Selected product</h3>
-                {selectedProduct ? (
-                  <div className="selected-product-card">
-                    <ProductIcon product={selectedProduct} />
-                    <div>
-                      <strong>{selectedProduct.name}</strong>
-                      <span>{selectedProduct.type}</span>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="select-product-message">Choose a product from the list.</p>
-                )}
+                <SelectedProductDetails product={selectedProduct} />
 
                 <label>
                   Quantity
@@ -302,9 +351,7 @@ export default function MyFridgePage({ products, onProductsChange }) {
                 </label>
 
                 <button className="save-product-button" disabled={!selectedProduct} type="submit">
-                  {addedProducts.some((product) => product.id === selectedProduct?.id)
-                    ? 'Save changes'
-                    : 'Add'}
+                  {getSaveButtonText()}
                 </button>
               </div>
             </form>
