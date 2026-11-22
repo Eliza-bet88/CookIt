@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Book, Fridge, Heart, HomeAlt, User } from 'iconoir-react'
 import {
   getDailyRecipe,
   getRecipeById,
@@ -14,6 +13,9 @@ import { fridgeStorageName, getSavedProducts } from './pages/MyFridge/fridgeStor
 import ProfilePage from './pages/Profile/ProfilePage'
 import { getSavedUserProfile, profileStorageName } from './pages/Profile/profileStorage'
 import RecipesPage from './pages/Recipes/RecipesPage'
+import RecipeCard from './components/RecipeCard'
+import RecipeDetail from './components/RecipeDetail'
+import Sidebar from './components/Sidebar'
 import './App.css'
 
 const storageName = 'cookit.daily-recipe'
@@ -22,21 +24,14 @@ const favoritesStorageName = 'cookit.favorite-recipes'
 const recommendedRecipesStorageName = 'cookit.recommended-recipes'
 const historyPreviewSize = 4
 
-const menuItems = [
-  { path: '/', label: 'Home', icon: HomeAlt },
-  { path: '/my-fridge', label: 'My Fridge', icon: Fridge },
-  { path: '/recipes', label: 'Recipes', icon: Book },
-  { path: '/favorites', label: 'Favorites', icon: Heart },
-  { path: '/profile', label: 'Profile', icon: User },
-]
-
-const demoPages = {
-}
-
 function getSavedFavoriteRecipes() {
   try {
     const savedRecipes = JSON.parse(localStorage.getItem(favoritesStorageName))
-    return Array.isArray(savedRecipes) ? savedRecipes : []
+    if (Array.isArray(savedRecipes)) {
+      return savedRecipes
+    }
+
+    return []
   } catch {
     return []
   }
@@ -45,8 +40,27 @@ function getSavedFavoriteRecipes() {
 function getSavedRecommendedRecipes() {
   try {
     const savedRecipes = JSON.parse(localStorage.getItem(recommendedRecipesStorageName))
-    return Array.isArray(savedRecipes) ? savedRecipes : []
+    if (Array.isArray(savedRecipes)) {
+      return savedRecipes
+    }
+
+    return []
   } catch {
+    return []
+  }
+}
+
+function getSavedRecipeHistory() {
+  try {
+    const savedHistory = JSON.parse(localStorage.getItem(historyStorageName))
+
+    if (Array.isArray(savedHistory)) {
+      return savedHistory
+    }
+
+    return []
+  } catch {
+    localStorage.removeItem(historyStorageName)
     return []
   }
 }
@@ -55,7 +69,9 @@ function getRecipeDetails(recipe) {
   let ingredients = 0
 
   for (let number = 1; number <= 20; number += 1) {
-    if (recipe[`strIngredient${number}`]?.trim()) {
+    const ingredient = recipe[`strIngredient${number}`]
+
+    if (ingredient && ingredient.trim()) {
       ingredients += 1
     }
   }
@@ -71,142 +87,38 @@ function getRecipeDetails(recipe) {
   return { estimatedMinutes, difficulty }
 }
 
-function getIngredients(recipe) {
-  const ingredients = []
-
-  for (let number = 1; number <= 20; number += 1) {
-    const name = recipe[`strIngredient${number}`]?.trim()
-    const measure = recipe[`strMeasure${number}`]?.trim()
-
-    if (name) {
-      ingredients.push(measure ? `${measure} ${name}` : name)
-    }
+function getRecipeDayContent(recipe, details) {
+  const content = {
+    category: 'Recipe',
+    time: '—',
+    difficulty: '—',
+    description: 'Your recipe of the day is being prepared.',
   }
 
-  return ingredients
+  if (recipe) {
+    content.category = recipe.strCategory
+    content.description = `A tasty ${recipe.strMeal} recipe for today.`
+  }
+
+  if (details) {
+    content.time = `≈ ${details.estimatedMinutes} min`
+    content.difficulty = details.difficulty
+  }
+
+  return content
 }
 
-function getVideoEmbedUrl(videoUrl) {
-  if (!videoUrl) {
-    return ''
+function HomeFridgeProducts({ products }) {
+  if (products.length === 0) {
+    return <p className="home-fridge-empty">Your fridge is empty. Add products to find matching recipes.</p>
   }
 
-  try {
-    const url = new URL(videoUrl)
-    const videoId = url.hostname.includes('youtu.be')
-      ? url.pathname.slice(1)
-      : url.searchParams.get('v')
-
-    return videoId ? `https://www.youtube.com/embed/${videoId}` : ''
-  } catch {
-    return ''
-  }
-}
-
-function RecipeDialog({ recipe, status, onClose, isFavorite, onToggleFavorite }) {
-  if (!recipe && status !== 'loading') {
-    return null
-  }
-
-  const videoEmbedUrl = recipe ? getVideoEmbedUrl(recipe.strYoutube) : ''
-
-  return (
-    <div className="recipe-dialog-backdrop" role="presentation">
-      <section
-        aria-labelledby="recipe-dialog-title"
-        aria-modal="true"
-        className="recipe-dialog"
-        role="dialog"
-      >
-        <button
-          aria-label="Close recipe"
-          className="close-dialog-button"
-          onClick={onClose}
-          type="button"
-        >
-          ×
-        </button>
-
-        {status === 'loading' && <p className="dialog-message">Loading recipe...</p>}
-        {status === 'error' && <p className="dialog-message">Could not load this recipe.</p>}
-
-        {recipe && status === 'ready' && (
-          <>
-            <img className="recipe-dialog-image" src={recipe.strMealThumb} alt={recipe.strMeal} />
-            <div className="recipe-dialog-content">
-              <p className="recipe-dialog-category">{recipe.strCategory} · {recipe.strArea}</p>
-              <div className="recipe-dialog-title-row">
-                <h2 id="recipe-dialog-title">{recipe.strMeal}</h2>
-                <FavoriteButton
-                  isFavorite={isFavorite(recipe)}
-                  onClick={() => onToggleFavorite(recipe)}
-                  recipeName={recipe.strMeal}
-                />
-              </div>
-              <h3>Ingredients</h3>
-              <ul className="ingredient-list">
-                {getIngredients(recipe).map((ingredient) => <li key={ingredient}>{ingredient}</li>)}
-              </ul>
-              <h3>Instructions</h3>
-              <p className="recipe-instructions">{recipe.strInstructions}</p>
-              {videoEmbedUrl && (
-                <div className="recipe-video">
-                  <iframe
-                    allowFullScreen
-                    src={videoEmbedUrl}
-                    title={`${recipe.strMeal} video`}
-                  />
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </section>
+  return products.map((product) => (
+    <div className="ingredient" key={product.id}>
+      <ProductIcon product={product} />
+      <p>{product.name}</p>
     </div>
-  )
-}
-
-function RecipeCard({ recipe, isFavorite, onOpenRecipe, onToggleFavorite }) {
-  return (
-    <article className="recipe-card">
-      <button className="recipe-card-open" onClick={() => onOpenRecipe(recipe)} type="button">
-        <img src={recipe.strMealThumb} alt={recipe.strMeal} />
-        <h3>{recipe.strMeal}</h3>
-      </button>
-      <FavoriteButton
-        isFavorite={isFavorite(recipe)}
-        onClick={() => onToggleFavorite(recipe)}
-        recipeName={recipe.strMeal}
-      />
-    </article>
-  )
-}
-
-function Sidebar({ currentPath, goToPage, userName }) {
-  return (
-    <aside className="sidebar">
-      <h1>CookIt</h1>
-      <nav className="main-menu" aria-label="Main navigation">
-        {menuItems.map((item) => {
-          const Icon = item.icon
-          const isActive = currentPath === item.path
-
-          return (
-            <button
-              className={isActive ? 'menu-link active-menu-link' : 'menu-link'}
-              key={item.path}
-              onClick={() => goToPage(item.path)}
-              type="button"
-            >
-              <Icon aria-hidden="true" />
-              <span>{item.label}</span>
-            </button>
-          )
-        })}
-      </nav>
-      <p className="user-name">{userName}</p>
-    </aside>
-  )
+  ))
 }
 
 export default function App() {
@@ -215,15 +127,7 @@ export default function App() {
   const [searchText, setSearchText] = useState('')
   const [searchRecipesList, setSearchRecipesList] = useState([])
   const [recommendedRecipes, setRecommendedRecipes] = useState(getSavedRecommendedRecipes)
-  const [recipeHistory, setRecipeHistory] = useState(() => {
-    try {
-      const savedHistory = JSON.parse(localStorage.getItem(historyStorageName))
-      return Array.isArray(savedHistory) ? savedHistory : []
-    } catch {
-      localStorage.removeItem(historyStorageName)
-      return []
-    }
-  })
+  const [recipeHistory, setRecipeHistory] = useState(getSavedRecipeHistory)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [openedRecipe, setOpenedRecipe] = useState(null)
   const [openedRecipeStatus, setOpenedRecipeStatus] = useState('idle')
@@ -245,9 +149,13 @@ export default function App() {
 
   function toggleFavoriteRecipe(recipe) {
     const recipeIsFavorite = isFavoriteRecipe(recipe)
-    const updatedFavoriteRecipes = recipeIsFavorite
-      ? favoriteRecipes.filter((favoriteRecipe) => favoriteRecipe.idMeal !== recipe.idMeal)
-      : [recipe, ...favoriteRecipes]
+    let updatedFavoriteRecipes
+
+    if (recipeIsFavorite) {
+      updatedFavoriteRecipes = favoriteRecipes.filter((favoriteRecipe) => favoriteRecipe.idMeal !== recipe.idMeal)
+    } else {
+      updatedFavoriteRecipes = [recipe, ...favoriteRecipes]
+    }
 
     setFavoriteRecipes(updatedFavoriteRecipes)
     localStorage.setItem(favoritesStorageName, JSON.stringify(updatedFavoriteRecipes))
@@ -262,7 +170,18 @@ export default function App() {
     function showPreviousPage() {
       const path = window.location.pathname
       setCurrentPath(path)
-      setPage(path === '/recommended' ? 'recommended' : path === '/search' ? 'search' : 'home')
+
+      if (path === '/recommended') {
+        setPage('recommended')
+        return
+      }
+
+      if (path === '/search') {
+        setPage('search')
+        return
+      }
+
+      setPage('home')
     }
 
     window.addEventListener('popstate', showPreviousPage)
@@ -302,7 +221,7 @@ export default function App() {
         localStorage.removeItem(storageName)
       }
 
-      if (savedRecipe?.date === today && savedRecipe.recipe) {
+      if (savedRecipe && savedRecipe.date === today && savedRecipe.recipe) {
         if (pageIsOpen) {
           setRecipe(savedRecipe.recipe)
           setDailyRecipeStatus('ready')
@@ -447,7 +366,12 @@ export default function App() {
     setCurrentPath(path)
   }
 
-  const recipeDetails = recipe ? getRecipeDetails(recipe) : null
+  let recipeDetails = null
+
+  if (recipe) {
+    recipeDetails = getRecipeDetails(recipe)
+  }
+  const recipeDayContent = getRecipeDayContent(recipe, recipeDetails)
   if (currentPath === '/my-fridge') {
     return (
       <div className="page demo-layout">
@@ -468,7 +392,7 @@ export default function App() {
           products={fridgeProducts}
           onEditIngredients={() => goToPage('/my-fridge')}
         />
-        <RecipeDialog recipe={openedRecipe} status={openedRecipeStatus} onClose={closeRecipe} isFavorite={isFavoriteRecipe} onToggleFavorite={toggleFavoriteRecipe} />
+        <RecipeDetail recipe={openedRecipe} status={openedRecipeStatus} onClose={closeRecipe} isFavorite={isFavoriteRecipe} onToggleFavorite={toggleFavoriteRecipe} />
       </div>
     )
   }
@@ -483,7 +407,7 @@ export default function App() {
           onOpenRecipe={openRecipe}
           onToggleFavorite={toggleFavoriteRecipe}
         />
-        <RecipeDialog recipe={openedRecipe} status={openedRecipeStatus} onClose={closeRecipe} isFavorite={isFavoriteRecipe} onToggleFavorite={toggleFavoriteRecipe} />
+        <RecipeDetail recipe={openedRecipe} status={openedRecipeStatus} onClose={closeRecipe} isFavorite={isFavoriteRecipe} onToggleFavorite={toggleFavoriteRecipe} />
       </div>
     )
   }
@@ -503,18 +427,7 @@ export default function App() {
           onClearRecipeHistory={clearRecipeHistory}
           viewedRecipeCount={recipeHistory.length}
         />
-        <RecipeDialog recipe={openedRecipe} status={openedRecipeStatus} onClose={closeRecipe} isFavorite={isFavoriteRecipe} onToggleFavorite={toggleFavoriteRecipe} />
-      </div>
-    )
-  }
-
-  const DemoPage = demoPages[currentPath]
-
-  if (DemoPage) {
-    return (
-      <div className="page demo-layout">
-        <Sidebar currentPath={currentPath} goToPage={goToPage} userName={userProfile.fullName} />
-        <DemoPage />
+        <RecipeDetail recipe={openedRecipe} status={openedRecipeStatus} onClose={closeRecipe} isFavorite={isFavoriteRecipe} onToggleFavorite={toggleFavoriteRecipe} />
       </div>
     )
   }
@@ -540,7 +453,7 @@ export default function App() {
           ))}
         </div>
         </main>
-        <RecipeDialog recipe={openedRecipe} status={openedRecipeStatus} onClose={closeRecipe} isFavorite={isFavoriteRecipe} onToggleFavorite={toggleFavoriteRecipe} />
+        <RecipeDetail recipe={openedRecipe} status={openedRecipeStatus} onClose={closeRecipe} isFavorite={isFavoriteRecipe} onToggleFavorite={toggleFavoriteRecipe} />
       </>
     )
   }
@@ -566,7 +479,7 @@ export default function App() {
           ))}
         </div>
         </main>
-        <RecipeDialog recipe={openedRecipe} status={openedRecipeStatus} onClose={closeRecipe} isFavorite={isFavoriteRecipe} onToggleFavorite={toggleFavoriteRecipe} />
+        <RecipeDetail recipe={openedRecipe} status={openedRecipeStatus} onClose={closeRecipe} isFavorite={isFavoriteRecipe} onToggleFavorite={toggleFavoriteRecipe} />
       </>
     )
   }
@@ -589,9 +502,9 @@ export default function App() {
         <section className="recipe-day">
           <div className="recipe-day-content">
             <div className="recipe-tags">
-              <span>{recipe ? recipe.strCategory : 'Recipe'}</span>
-              <span>{recipeDetails ? `≈ ${recipeDetails.estimatedMinutes} min` : '—'}</span>
-              <span>{recipeDetails ? recipeDetails.difficulty : '—'}</span>
+              <span>{recipeDayContent.category}</span>
+              <span>{recipeDayContent.time}</span>
+              <span>{recipeDayContent.difficulty}</span>
             </div>
 
             <h2>
@@ -600,11 +513,7 @@ export default function App() {
               the day
             </h2>
 
-            <p className="recipe-day-description">
-              {recipe
-                ? `A tasty ${recipe.strMeal} recipe for today.`
-                : 'Your recipe of the day is being prepared.'}
-            </p>
+            <p className="recipe-day-description">{recipeDayContent.description}</p>
 
             <button
               className="recipe-info-button"
@@ -638,12 +547,7 @@ export default function App() {
         <section className="fridge" id="fridge">
           <h2>My fridge</h2>
           <div className="ingredients">
-            {fridgeProducts.length > 0 ? fridgeProducts.map((product) => (
-              <div className="ingredient" key={product.id}>
-                <ProductIcon product={product} />
-                <p>{product.name}</p>
-              </div>
-            )) : <p className="home-fridge-empty">Your fridge is empty. Add products to find matching recipes.</p>}
+            <HomeFridgeProducts products={fridgeProducts} />
           </div>
 
           <button className="button" onClick={() => goToPage('/recipes')} type="button">
@@ -778,7 +682,7 @@ export default function App() {
         </div>
       )}
 
-      <RecipeDialog recipe={openedRecipe} status={openedRecipeStatus} onClose={closeRecipe} isFavorite={isFavoriteRecipe} onToggleFavorite={toggleFavoriteRecipe} />
+      <RecipeDetail recipe={openedRecipe} status={openedRecipeStatus} onClose={closeRecipe} isFavorite={isFavoriteRecipe} onToggleFavorite={toggleFavoriteRecipe} />
     </div>
   )
 }

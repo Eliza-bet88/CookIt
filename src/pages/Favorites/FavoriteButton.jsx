@@ -1,10 +1,18 @@
 import { Heart } from 'iconoir-react'
 
 export default function FavoriteButton({ isFavorite, onClick, recipeName }) {
+  let buttonLabel = `Add ${recipeName} to favorites`
+  let className = 'favorite-button'
+
+  if (isFavorite) {
+    buttonLabel = `Remove ${recipeName} from favorites`
+    className = 'favorite-button is-favorite'
+  }
+
   return (
     <button
-      aria-label={isFavorite ? `Remove ${recipeName} from favorites` : `Add ${recipeName} to favorites`}
-      className={isFavorite ? 'favorite-button is-favorite' : 'favorite-button'}
+      aria-label={buttonLabel}
+      className={className}
       onClick={onClick}
       type="button"
     >

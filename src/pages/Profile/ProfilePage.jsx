@@ -20,6 +20,32 @@ function FormActions({ onCancel, onSave, saveText = 'Save changes' }) {
   return <div className="modal-actions"><button onClick={onCancel} type="button">Cancel</button><button onClick={onSave} type="button">{saveText}</button></div>
 }
 
+function NotesContent({ notes }) {
+  if (notes) {
+    return <p className="saved-notes">{notes}</p>
+  }
+
+  return <div className="notes-lines"><span /><span /><span /><span /><span /></div>
+}
+
+function HistoryContent({ recipeHistory, onOpenRecipe, onRemoveRecipeFromHistory }) {
+  if (recipeHistory.length === 0) {
+    return <p>No recipes viewed yet.</p>
+  }
+
+  return recipeHistory.map((recipe) => (
+    <article key={recipe.idMeal}>
+      <button onClick={() => onOpenRecipe(recipe)} type="button">
+        <img alt={recipe.strMeal} src={recipe.strMealThumb} />
+        <span>{recipe.strMeal}</span>
+      </button>
+      <button aria-label={`Remove ${recipe.strMeal}`} onClick={() => onRemoveRecipeFromHistory(recipe.idMeal)} type="button">
+        <Trash />
+      </button>
+    </article>
+  ))
+}
+
 export default function ProfilePage(props) {
   const { favoriteCount, onClearRecipeHistory, onOpenFavorites, onOpenRecipe, onProfileChange, onRemoveRecipeFromHistory, profile, recipeHistory, viewedRecipeCount } = props
   const [openModal, setOpenModal] = useState('')
@@ -122,7 +148,7 @@ export default function ProfilePage(props) {
         </section>
         <section className="profile-panel notes-panel">
           <header><h2>Notes</h2><button onClick={openNotesEditor} type="button">Edit</button></header>
-          {profile.notes ? <p className="saved-notes">{profile.notes}</p> : <div className="notes-lines"><span /><span /><span /><span /><span /></div>}
+          <NotesContent notes={profile.notes} />
         </section>
       </div>
 
@@ -209,25 +235,11 @@ export default function ProfilePage(props) {
       {isHistoryOpen && (
         <Modal onClose={() => setIsHistoryOpen(false)} title="Recently viewed recipes">
           <div className="profile-history-list">
-            {recipeHistory.length === 0 ? (
-              <p>No recipes viewed yet.</p>
-            ) : (
-              recipeHistory.map((recipe) => (
-                <article key={recipe.idMeal}>
-                  <button onClick={() => onOpenRecipe(recipe)} type="button">
-                    <img alt={recipe.strMeal} src={recipe.strMealThumb} />
-                    <span>{recipe.strMeal}</span>
-                  </button>
-                  <button
-                    aria-label={`Remove ${recipe.strMeal}`}
-                    onClick={() => onRemoveRecipeFromHistory(recipe.idMeal)}
-                    type="button"
-                  >
-                    <Trash />
-                  </button>
-                </article>
-              ))
-            )}
+            <HistoryContent
+              recipeHistory={recipeHistory}
+              onOpenRecipe={onOpenRecipe}
+              onRemoveRecipeFromHistory={onRemoveRecipeFromHistory}
+            />
           </div>
           {recipeHistory.length > 0 && (
             <button className="clear-profile-history" onClick={onClearRecipeHistory} type="button">

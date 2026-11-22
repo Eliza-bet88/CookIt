@@ -6,7 +6,12 @@ async function getMeals(url) {
   }
 
   const data = await response.json()
-  return data.meals ?? []
+
+  if (data.meals) {
+    return data.meals
+  }
+
+  return []
 }
 
 export async function getRecipeById(id) {
@@ -61,15 +66,37 @@ const cuisineAreas = {
 }
 
 export async function getRecommendedRecipes(favoriteCuisines = []) {
-  const areas = favoriteCuisines.flatMap((cuisine) => cuisineAreas[cuisine] ?? [])
-  const preferredRecipeLists = await Promise.all(
-    areas.map((area) => getMeals(`https://www.themealdb.com/api/json/v1/1/filter.php?a=${encodeURIComponent(area)}`))
-  )
+  const areas = []
+
+  for (const cuisine of favoriteCuisines) {
+    const cuisineAreasList = cuisineAreas[cuisine]
+
+    if (cuisineAreasList) {
+      areas.push(...cuisineAreasList)
+    }
+  }
+
+  const preferredRecipeLists = []
+
+  for (const area of areas) {
+    const recipes = await getMeals(
+      `https://www.themealdb.com/api/json/v1/1/filter.php?a=${encodeURIComponent(area)}`
+    )
+    preferredRecipeLists.push(recipes)
+  }
+
   const chickenRecipes = await getMeals('https://www.themealdb.com/api/json/v1/1/filter.php?i=chicken')
   const recipesById = new Map()
 
-  preferredRecipeLists.flat().forEach((recipe) => recipesById.set(recipe.idMeal, recipe))
-  chickenRecipes.forEach((recipe) => recipesById.set(recipe.idMeal, recipe))
+  for (const recipeList of preferredRecipeLists) {
+    for (const recipe of recipeList) {
+      recipesById.set(recipe.idMeal, recipe)
+    }
+  }
+
+  for (const recipe of chickenRecipes) {
+    recipesById.set(recipe.idMeal, recipe)
+  }
 
   return [...recipesById.values()].slice(0, 10)
 }
@@ -84,7 +111,11 @@ export async function getDailyRecipe() {
   }
 
   const data = await response.json()
-  const recipe = data.meals?.[0]
+  let recipe = null
+
+  if (data.meals) {
+    recipe = data.meals[0]
+  }
 
   if (!recipe) {
     throw new Error('The recipe of the day is unavailable')

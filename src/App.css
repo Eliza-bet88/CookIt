@@ -556,7 +556,7 @@ button.history-item {
   color: #a33e3e;
 }
 
-.recipe-dialog-backdrop {
+.recipe-detail-backdrop {
   position: fixed;
   z-index: 50;
   inset: 0;
@@ -566,7 +566,7 @@ button.history-item {
   background: rgba(25, 57, 38, 0.48);
 }
 
-.recipe-dialog {
+.recipe-detail {
   position: relative;
   display: grid;
   grid-template-columns: minmax(190px, 0.72fr) minmax(0, 1fr);
@@ -596,47 +596,47 @@ button.history-item {
   line-height: 1;
 }
 
-.recipe-dialog-image {
+.recipe-detail-image {
   width: 100%;
   min-height: 100%;
   object-fit: cover;
 }
 
-.recipe-dialog-content {
+.recipe-detail-content {
   padding: 36px 32px;
 }
 
-.recipe-dialog-category {
+.recipe-detail-category {
   margin: 0;
   color: #6a8b77;
   font-size: 14px;
   font-weight: 700;
 }
 
-.recipe-dialog-content h2 {
+.recipe-detail-content h2 {
   margin: 8px 0 26px;
   color: #20593d;
   font-size: 34px;
   line-height: 1;
 }
 
-.recipe-dialog-title-row {
+.recipe-detail-title-row {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
 }
 
-.recipe-dialog-title-row h2 {
+.recipe-detail-title-row h2 {
   margin-right: 0;
 }
 
-.recipe-dialog-title-row .favorite-button {
+.recipe-detail-title-row .favorite-button {
   flex: 0 0 auto;
   margin-top: 6px;
 }
 
-.recipe-dialog-content h3 {
+.recipe-detail-content h3 {
   margin: 22px 0 9px;
   color: #20593d;
   font-size: 17px;
@@ -922,17 +922,17 @@ button.history-item {
     min-height: 110px;
   }
 
-  .recipe-dialog {
+  .recipe-detail {
     grid-template-columns: 1fr;
     max-height: 90vh;
   }
 
-  .recipe-dialog-image {
+  .recipe-detail-image {
     height: 220px;
     min-height: 0;
   }
 
-  .recipe-dialog-content {
+  .recipe-detail-content {
     padding: 28px 24px;
   }
 
@@ -1473,8 +1473,7 @@ button.history-item {
   gap: 10px;
 }
 
-.choice-list button,
-.choice-list span {
+.choice-list button {
   min-height: 42px;
   padding: 0 17px;
   border: 0;
@@ -1484,6 +1483,20 @@ button.history-item {
   cursor: pointer;
   font: inherit;
   font-weight: 700;
+}
+
+.choice-list span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 17px;
+  border-radius: 999px;
+  background: #397750;
+  color: #fff;
+  font-size: inherit;
+  font-weight: 700;
+  text-align: center;
 }
 
 .choice-list .selected-choice { background: #397750; color: #fff; }

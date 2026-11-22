@@ -7,16 +7,25 @@ import FavoriteButton from '../Favorites/FavoriteButton'
 const recipesStorageName = 'cookit.ingredient-recipes'
 
 function getRecipeKey(products) {
-  return products
-    .map((product) => product.name.toLowerCase())
-    .sort()
-    .join('|')
+  const productNames = []
+
+  for (const product of products) {
+    productNames.push(product.name.toLowerCase())
+  }
+
+  productNames.sort()
+  return productNames.join('|')
 }
 
 function getSavedRecipes(key) {
   try {
     const saved = JSON.parse(localStorage.getItem(recipesStorageName))
-    return saved?.key === key && Array.isArray(saved.recipes) ? saved.recipes : []
+
+    if (saved && saved.key === key && Array.isArray(saved.recipes)) {
+      return saved.recipes
+    }
+
+    return []
   } catch {
     return []
   }
@@ -33,18 +42,30 @@ function saveRecipes(key, recipes) {
 function getRecipesWithIngredientMatches(recipeLists) {
   const recipesById = new Map()
 
-  recipeLists.flat().forEach((recipe) => {
-    const savedRecipe = recipesById.get(recipe.idMeal)
-    const matchingIngredientCount = savedRecipe
-      ? savedRecipe.matchingIngredientCount + 1
-      : 1
+  for (const recipeList of recipeLists) {
+    for (const recipe of recipeList) {
+      const savedRecipe = recipesById.get(recipe.idMeal)
+      let matchingIngredientCount = 1
 
-    recipesById.set(recipe.idMeal, { ...recipe, matchingIngredientCount })
-  })
+      if (savedRecipe) {
+        matchingIngredientCount = savedRecipe.matchingIngredientCount + 1
+      }
 
-  return [...recipesById.values()].sort(
-    (first, second) => second.matchingIngredientCount - first.matchingIngredientCount
-  )
+      recipesById.set(recipe.idMeal, { ...recipe, matchingIngredientCount })
+    }
+  }
+
+  const recipes = [...recipesById.values()]
+  recipes.sort((first, second) => second.matchingIngredientCount - first.matchingIngredientCount)
+  return recipes
+}
+
+function getIngredientMatchText(count) {
+  if (count === 1) {
+    return 'ingredient match'
+  }
+
+  return 'ingredient matches'
 }
 
 export default function RecipesPage({ products, onEditIngredients, onOpenRecipe, onToggleFavorite, isFavorite }) {
@@ -151,7 +172,7 @@ export default function RecipesPage({ products, onEditIngredients, onOpenRecipe,
               <div>
               <h2>{recipe.strMeal}</h2>
               <p>
-                <User aria-hidden="true" /> {recipe.matchingIngredientCount} ingredient match{recipe.matchingIngredientCount > 1 ? 'es' : ''}
+                <User aria-hidden="true" /> {recipe.matchingIngredientCount} {getIngredientMatchText(recipe.matchingIngredientCount)}
               </p>
               </div>
             </button>

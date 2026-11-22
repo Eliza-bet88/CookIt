@@ -16,7 +16,12 @@ export const defaultUserProfile = {
 export function getSavedUserProfile() {
   try {
     const savedProfile = JSON.parse(localStorage.getItem(profileStorageName))
-    return savedProfile ? { ...defaultUserProfile, ...savedProfile } : defaultUserProfile
+
+    if (savedProfile) {
+      return { ...defaultUserProfile, ...savedProfile }
+    }
+
+    return defaultUserProfile
   } catch {
     return defaultUserProfile
   }
