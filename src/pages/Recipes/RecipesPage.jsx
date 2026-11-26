@@ -4,7 +4,9 @@ import ProductIcon from '../MyFridge/ProductIcon'
 import { searchRecipes } from '../../api/meals'
 import FavoriteButton from '../Favorites/FavoriteButton'
 
-const recipesStorageName = 'cookit.ingredient-recipes'
+function recipesStorageName(userId) {
+  return `cookit.${userId}.ingredient-recipes`
+}
 
 function getRecipeKey(products) {
   const productNames = []
@@ -17,9 +19,9 @@ function getRecipeKey(products) {
   return productNames.join('|')
 }
 
-function getSavedRecipes(key) {
+function getSavedRecipes(key, userId) {
   try {
-    const saved = JSON.parse(localStorage.getItem(recipesStorageName))
+    const saved = JSON.parse(localStorage.getItem(recipesStorageName(userId)))
 
     if (saved && saved.key === key && Array.isArray(saved.recipes)) {
       return saved.recipes
@@ -31,9 +33,9 @@ function getSavedRecipes(key) {
   }
 }
 
-function saveRecipes(key, recipes) {
+function saveRecipes(key, recipes, userId) {
   try {
-    localStorage.setItem(recipesStorageName, JSON.stringify({ key, recipes }))
+    localStorage.setItem(recipesStorageName(userId), JSON.stringify({ key, recipes }))
   } catch {
     return
   }
@@ -68,7 +70,7 @@ function getIngredientMatchText(count) {
   return 'ingredient matches'
 }
 
-export default function RecipesPage({ products, onEditIngredients, onOpenRecipe, onToggleFavorite, isFavorite }) {
+export default function RecipesPage({ products, userId, onEditIngredients, onOpenRecipe, onToggleFavorite, isFavorite }) {
   const [recipesWithIngredientMatches, setRecipesWithIngredientMatches] = useState([])
   const [recipeLoadingStatus, setRecipeLoadingStatus] = useState('idle')
 
@@ -83,7 +85,7 @@ export default function RecipesPage({ products, onEditIngredients, onOpenRecipe,
       }
 
       const key = getRecipeKey(products)
-      const savedRecipes = getSavedRecipes(key)
+      const savedRecipes = getSavedRecipes(key, userId)
 
       if (savedRecipes.length > 0) {
         setRecipesWithIngredientMatches(savedRecipes)
@@ -105,18 +107,21 @@ export default function RecipesPage({ products, onEditIngredients, onOpenRecipe,
           results.forEach((result) => {
             if (result.status === 'fulfilled') recipeLists.push(result.value)
           })
-
-          if (isPageOpen && recipeLists.length > 0) {
-            const recipes = getRecipesWithIngredientMatches(recipeLists)
-            saveRecipes(key, recipes)
-            setRecipesWithIngredientMatches(recipes)
-            setRecipeLoadingStatus('ready')
-          }
         }
 
-        if (isPageOpen && recipeLists.length === 0) {
+        if (!isPageOpen) {
+          return
+        }
+
+        if (recipeLists.length === 0) {
           setRecipeLoadingStatus('error')
+          return
         }
+
+        const recipes = getRecipesWithIngredientMatches(recipeLists)
+        saveRecipes(key, recipes, userId)
+        setRecipesWithIngredientMatches(recipes)
+        setRecipeLoadingStatus('ready')
       } catch {
         if (isPageOpen) setRecipeLoadingStatus('error')
       }
@@ -125,7 +130,7 @@ export default function RecipesPage({ products, onEditIngredients, onOpenRecipe,
     loadRecipes()
 
     return () => { isPageOpen = false }
-  }, [products])
+  }, [products, userId])
 
   return (
     <main className="recipes-page">
