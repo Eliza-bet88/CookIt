@@ -6,9 +6,44 @@ services:
     container_name: cookit-app
     restart: unless-stopped
     ports:
-      - "5173:5173"
+      - "5175:5173"
     env_file:
       - ../.env
+    environment:
+      VITE_API_URL: http://localhost:8000
+
+  backend:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    container_name: cookit-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg2://cookit:cookit@db:5432/cookit
+      API_SECRET_KEY: cookit-local-secret
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17-alpine
+    container_name: cookit-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cookit
+      POSTGRES_USER: cookit
+      POSTGRES_PASSWORD: cookit
+    ports:
+      - "55432:5432"
+    volumes:
+      - cookit_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cookit -d cookit"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   tunnel:
     image: cloudflare/cloudflared:latest
@@ -17,3 +52,6 @@ services:
     env_file:
       - ../.env
     command: tunnel --no-autoupdate run
+
+volumes:
+  cookit_postgres_data:
