@@ -8,7 +8,7 @@ const menuItems = [
   { path: '/profile', label: 'Profile', icon: User },
 ]
 
-export default function Sidebar({ currentPath, goToPage, userName }) {
+export default function Sidebar({ currentPath, goToPage, onLogOut, userName }) {
   return (
     <aside className="sidebar">
       <h1>CookIt</h1>
@@ -29,7 +29,10 @@ export default function Sidebar({ currentPath, goToPage, userName }) {
           )
         })}
       </nav>
-      <p className="user-name">{userName}</p>
+      <div className="sidebar-user">
+        <p className="user-name">{userName}</p>
+        <button className="log-out-button" onClick={onLogOut} type="button">Log out</button>
+      </div>
     </aside>
   )
 }

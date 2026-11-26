@@ -1,8 +1,10 @@
-export const fridgeStorageName = 'cookit.fridge-products'
+export function fridgeStorageName(userId) {
+  return `cookit.${userId}.fridge-products`
+}
 
-export function getSavedProducts() {
+export function getSavedProducts(userId) {
   try {
-    const savedProducts = JSON.parse(localStorage.getItem(fridgeStorageName))
+    const savedProducts = JSON.parse(localStorage.getItem(fridgeStorageName(userId)))
 
     if (Array.isArray(savedProducts)) {
       return savedProducts

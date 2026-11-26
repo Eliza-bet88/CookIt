@@ -16,17 +16,27 @@ import RecipesPage from './pages/Recipes/RecipesPage'
 import RecipeCard from './components/RecipeCard'
 import RecipeDetail from './components/RecipeDetail'
 import Sidebar from './components/Sidebar'
+import AuthPage from './pages/Auth/AuthPage'
 import './App.css'
 
 const storageName = 'cookit.daily-recipe'
-const historyStorageName = 'cookit.recipe-history'
-const favoritesStorageName = 'cookit.favorite-recipes'
-const recommendedRecipesStorageName = 'cookit.recommended-recipes'
 const historyPreviewSize = 4
 
-function getSavedFavoriteRecipes() {
+function favoritesStorageName(userId) {
+  return `cookit.${userId}.favorite-recipes`
+}
+
+function historyStorageName(userId) {
+  return `cookit.${userId}.recipe-history`
+}
+
+function recommendedRecipesStorageName(userId) {
+  return `cookit.${userId}.recommended-recipes`
+}
+
+function getSavedFavoriteRecipes(userId) {
   try {
-    const savedRecipes = JSON.parse(localStorage.getItem(favoritesStorageName))
+    const savedRecipes = JSON.parse(localStorage.getItem(favoritesStorageName(userId)))
     if (Array.isArray(savedRecipes)) {
       return savedRecipes
     }
@@ -37,9 +47,9 @@ function getSavedFavoriteRecipes() {
   }
 }
 
-function getSavedRecommendedRecipes() {
+function getSavedRecommendedRecipes(userId) {
   try {
-    const savedRecipes = JSON.parse(localStorage.getItem(recommendedRecipesStorageName))
+    const savedRecipes = JSON.parse(localStorage.getItem(recommendedRecipesStorageName(userId)))
     if (Array.isArray(savedRecipes)) {
       return savedRecipes
     }
@@ -50,9 +60,9 @@ function getSavedRecommendedRecipes() {
   }
 }
 
-function getSavedRecipeHistory() {
+function getSavedRecipeHistory(userId) {
   try {
-    const savedHistory = JSON.parse(localStorage.getItem(historyStorageName))
+    const savedHistory = JSON.parse(localStorage.getItem(historyStorageName(userId)))
 
     if (Array.isArray(savedHistory)) {
       return savedHistory
@@ -60,7 +70,7 @@ function getSavedRecipeHistory() {
 
     return []
   } catch {
-    localStorage.removeItem(historyStorageName)
+    localStorage.removeItem(historyStorageName(userId))
     return []
   }
 }
@@ -121,26 +131,26 @@ function HomeFridgeProducts({ products }) {
   ))
 }
 
-export default function App() {
+function CookItApp({ onLogOut, userId, userEmail }) {
   const [recipe, setRecipe] = useState(null)
   const [dailyRecipeStatus, setDailyRecipeStatus] = useState('loading')
   const [searchText, setSearchText] = useState('')
   const [searchRecipesList, setSearchRecipesList] = useState([])
-  const [recommendedRecipes, setRecommendedRecipes] = useState(getSavedRecommendedRecipes)
-  const [recipeHistory, setRecipeHistory] = useState(getSavedRecipeHistory)
+  const [recommendedRecipes, setRecommendedRecipes] = useState(() => getSavedRecommendedRecipes(userId))
+  const [recipeHistory, setRecipeHistory] = useState(() => getSavedRecipeHistory(userId))
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [openedRecipe, setOpenedRecipe] = useState(null)
   const [openedRecipeStatus, setOpenedRecipeStatus] = useState('idle')
   const [message, setMessage] = useState('')
   const [page, setPage] = useState('home')
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
-  const [fridgeProducts, setFridgeProducts] = useState(getSavedProducts)
-  const [favoriteRecipes, setFavoriteRecipes] = useState(getSavedFavoriteRecipes)
-  const [userProfile, setUserProfile] = useState(getSavedUserProfile)
+  const [fridgeProducts, setFridgeProducts] = useState(() => getSavedProducts(userId))
+  const [favoriteRecipes, setFavoriteRecipes] = useState(() => getSavedFavoriteRecipes(userId))
+  const [userProfile, setUserProfile] = useState(() => getSavedUserProfile(userId, userEmail))
 
   function updateFridgeProducts(products) {
     setFridgeProducts(products)
-    localStorage.setItem(fridgeStorageName, JSON.stringify(products))
+    localStorage.setItem(fridgeStorageName(userId), JSON.stringify(products))
   }
 
   function isFavoriteRecipe(recipe) {
@@ -158,12 +168,12 @@ export default function App() {
     }
 
     setFavoriteRecipes(updatedFavoriteRecipes)
-    localStorage.setItem(favoritesStorageName, JSON.stringify(updatedFavoriteRecipes))
+    localStorage.setItem(favoritesStorageName(userId), JSON.stringify(updatedFavoriteRecipes))
   }
 
   function updateUserProfile(updatedProfile) {
     setUserProfile(updatedProfile)
-    localStorage.setItem(profileStorageName, JSON.stringify(updatedProfile))
+    localStorage.setItem(profileStorageName(userId), JSON.stringify(updatedProfile))
   }
 
   useEffect(() => {
@@ -196,7 +206,7 @@ export default function App() {
         const recipes = await getRecommendedRecipes(userProfile.favoriteCuisines)
         if (pageIsOpen) {
           setRecommendedRecipes(recipes)
-          localStorage.setItem(recommendedRecipesStorageName, JSON.stringify(recipes))
+          localStorage.setItem(recommendedRecipesStorageName(userId), JSON.stringify(recipes))
         }
       } catch {
         return
@@ -205,7 +215,7 @@ export default function App() {
 
     loadRecommendedRecipes()
     return () => { pageIsOpen = false }
-  }, [userProfile.favoriteCuisines])
+  }, [userId, userProfile.favoriteCuisines])
 
   useEffect(() => {
     let pageIsOpen = true
@@ -281,19 +291,19 @@ export default function App() {
     ].slice(0, 100)
 
     setRecipeHistory(updatedHistory)
-    localStorage.setItem(historyStorageName, JSON.stringify(updatedHistory))
+    localStorage.setItem(historyStorageName(userId), JSON.stringify(updatedHistory))
   }
 
   function clearRecipeHistory() {
     setRecipeHistory([])
-    localStorage.removeItem(historyStorageName)
+    localStorage.removeItem(historyStorageName(userId))
     setIsHistoryOpen(false)
   }
 
   function removeRecipeFromHistory(recipeId) {
     const updatedHistory = recipeHistory.filter((recipe) => recipe.idMeal !== recipeId)
     setRecipeHistory(updatedHistory)
-    localStorage.setItem(historyStorageName, JSON.stringify(updatedHistory))
+    localStorage.setItem(historyStorageName(userId), JSON.stringify(updatedHistory))
   }
 
   async function openRecipe(recipeToOpen) {
@@ -375,7 +385,7 @@ export default function App() {
   if (currentPath === '/my-fridge') {
     return (
       <div className="page demo-layout">
-        <Sidebar currentPath={currentPath} goToPage={goToPage} userName={userProfile.fullName} />
+        <Sidebar currentPath={currentPath} goToPage={goToPage} onLogOut={onLogOut} userName={userProfile.fullName} />
         <MyFridgePage products={fridgeProducts} onProductsChange={updateFridgeProducts} />
       </div>
     )
@@ -384,12 +394,13 @@ export default function App() {
   if (currentPath === '/recipes') {
     return (
       <div className="page demo-layout">
-        <Sidebar currentPath={currentPath} goToPage={goToPage} userName={userProfile.fullName} />
+        <Sidebar currentPath={currentPath} goToPage={goToPage} onLogOut={onLogOut} userName={userProfile.fullName} />
         <RecipesPage
           onOpenRecipe={openRecipe}
           isFavorite={isFavoriteRecipe}
           onToggleFavorite={toggleFavoriteRecipe}
           products={fridgeProducts}
+          userId={userId}
           onEditIngredients={() => goToPage('/my-fridge')}
         />
         <RecipeDetail recipe={openedRecipe} status={openedRecipeStatus} onClose={closeRecipe} isFavorite={isFavoriteRecipe} onToggleFavorite={toggleFavoriteRecipe} />
@@ -400,7 +411,7 @@ export default function App() {
   if (currentPath === '/favorites') {
     return (
       <div className="page demo-layout">
-        <Sidebar currentPath={currentPath} goToPage={goToPage} userName={userProfile.fullName} />
+        <Sidebar currentPath={currentPath} goToPage={goToPage} onLogOut={onLogOut} userName={userProfile.fullName} />
         <FavoritesPage
           favoriteRecipes={favoriteRecipes}
           isFavorite={isFavoriteRecipe}
@@ -415,7 +426,7 @@ export default function App() {
   if (currentPath === '/profile') {
     return (
       <div className="page demo-layout">
-        <Sidebar currentPath={currentPath} goToPage={goToPage} userName={userProfile.fullName} />
+        <Sidebar currentPath={currentPath} goToPage={goToPage} onLogOut={onLogOut} userName={userProfile.fullName} />
         <ProfilePage
           favoriteCount={favoriteRecipes.length}
           onOpenFavorites={() => goToPage('/favorites')}
@@ -486,7 +497,7 @@ export default function App() {
 
   return (
     <div className="page">
-      <Sidebar currentPath={currentPath} goToPage={goToPage} userName={userProfile.fullName} />
+      <Sidebar currentPath={currentPath} goToPage={goToPage} onLogOut={onLogOut} userName={userProfile.fullName} />
 
       <main className="content" id="home">
         <form className="search" onSubmit={searchRecipe}>
@@ -685,4 +696,29 @@ export default function App() {
       <RecipeDetail recipe={openedRecipe} status={openedRecipeStatus} onClose={closeRecipe} isFavorite={isFavoriteRecipe} onToggleFavorite={toggleFavoriteRecipe} />
     </div>
   )
+}
+
+export default function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(() => Boolean(localStorage.getItem('cookit.token')))
+  const [userId, setUserId] = useState(() => localStorage.getItem('cookit.user-id'))
+  const [userEmail, setUserEmail] = useState(() => localStorage.getItem('cookit.user-email') || '')
+
+  function logOut() {
+    localStorage.removeItem('cookit.token')
+    localStorage.removeItem('cookit.user-id')
+    localStorage.removeItem('cookit.user-email')
+    setIsLoggedIn(false)
+  }
+
+  function logIn(userId, email) {
+    setUserId(String(userId))
+    setUserEmail(email)
+    setIsLoggedIn(true)
+  }
+
+  if (!isLoggedIn) {
+    return <AuthPage onLoggedIn={logIn} />
+  }
+
+  return <CookItApp key={userId} onLogOut={logOut} userEmail={userEmail} userId={userId} />
 }

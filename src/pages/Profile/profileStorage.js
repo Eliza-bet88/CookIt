@@ -1,21 +1,27 @@
-export const profileStorageName = 'cookit.user-profile'
-
-export const defaultUserProfile = {
-  fullName: 'User Name',
-  email: 'user_name@gmail.com',
-  location: 'Latvia, Riga',
-  memberSince: new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date()),
-  cookingLevel: 'Beginner',
-  weeklyGoal: '5 times a week',
-  favoriteCuisines: [],
-  dietaryPreferences: [],
-  dislikedIngredients: [],
-  notes: '',
+export function profileStorageName(userId) {
+  return `cookit.${userId}.user-profile`
 }
 
-export function getSavedUserProfile() {
+export function getDefaultUserProfile(email) {
+  return {
+    fullName: 'User',
+    email,
+    location: '',
+    memberSince: new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date()),
+    cookingLevel: '',
+    weeklyGoal: '',
+    favoriteCuisines: [],
+    dietaryPreferences: [],
+    dislikedIngredients: [],
+    notes: '',
+  }
+}
+
+export function getSavedUserProfile(userId, email) {
+  const defaultUserProfile = getDefaultUserProfile(email)
+
   try {
-    const savedProfile = JSON.parse(localStorage.getItem(profileStorageName))
+    const savedProfile = JSON.parse(localStorage.getItem(profileStorageName(userId)))
 
     if (savedProfile) {
       return { ...defaultUserProfile, ...savedProfile }

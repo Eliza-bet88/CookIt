@@ -160,8 +160,8 @@ export default function ProfilePage(props) {
           <label>Email address<input onChange={(event) => setProfileDraft({ ...profileDraft, email: event.target.value })} value={profileDraft.email} /></label>
           <label>Location<input onChange={(event) => setProfileDraft({ ...profileDraft, location: event.target.value })} value={profileDraft.location} /></label>
           <label>Member since<input disabled value={profileDraft.memberSince} /></label>
-          <label>Cooking level<select onChange={(event) => setProfileDraft({ ...profileDraft, cookingLevel: event.target.value })} value={profileDraft.cookingLevel}>{cookingLevels.map((item) => <option key={item}>{item}</option>)}</select></label>
-          <label>Weekly goal<select onChange={(event) => setProfileDraft({ ...profileDraft, weeklyGoal: event.target.value })} value={profileDraft.weeklyGoal}>{weeklyGoals.map((item) => <option key={item}>{item}</option>)}</select></label>
+          <label>Cooking level<select onChange={(event) => setProfileDraft({ ...profileDraft, cookingLevel: event.target.value })} value={profileDraft.cookingLevel}><option value="">Not selected</option>{cookingLevels.map((item) => <option key={item}>{item}</option>)}</select></label>
+          <label>Weekly goal<select onChange={(event) => setProfileDraft({ ...profileDraft, weeklyGoal: event.target.value })} value={profileDraft.weeklyGoal}><option value="">Not selected</option>{weeklyGoals.map((item) => <option key={item}>{item}</option>)}</select></label>
         </div>
         <FormActions onCancel={closeModal} onSave={saveProfile} />
       </Modal>
